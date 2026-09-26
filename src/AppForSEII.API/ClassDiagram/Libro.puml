@@ -1,0 +1,10 @@
+@startuml
+class Libro {
+    + Id : int <<get>> <<set>>
+    + Titulo : string <<get>> <<set>>
+    + Autor : string <<get>> <<set>>
+    + PrecioCompra : decimal <<get>> <<set>>
+    + Stock : int <<get>> <<set>>
+}
+Libro --> "FechaLanzamiento" DateTime
+@enduml
