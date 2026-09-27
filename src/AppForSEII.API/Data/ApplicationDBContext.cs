@@ -20,5 +20,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Reposicion> Reposiciones { get; set; }
 
 
+    public DbSet<Libro> Libros { get; set; }
+
 
 }
