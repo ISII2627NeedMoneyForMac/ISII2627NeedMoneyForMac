@@ -1,0 +1,7 @@
+@startuml
+class Subasta {
+    + Id : int <<get>> <<set>>
+    + PrecioSubasta : decimal <<get>> <<set>>
+    + FechaSubasta : DateTime <<get>> <<set>>
+}
+@enduml

@@ -18,7 +18,9 @@ namespace AppForSEII.API.Models
         public string Autor { get; set; } = string.Empty;
 
         [Required]
-        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
+        [DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+         [System.ComponentModel.DataAnnotations.Display(Name = "FechaLanzamiento")]
         public DateTime FechaLanzamiento { get; set; }
 
         [Required]
