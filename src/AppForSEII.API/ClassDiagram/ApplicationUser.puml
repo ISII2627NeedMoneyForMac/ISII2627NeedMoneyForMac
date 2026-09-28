@@ -5,5 +5,8 @@ class ApplicationUser {
     + Name : string? <<get>> <<set>>
     + Surname : string? <<get>> <<set>>
 }
+class "DbSet`1"<T> {
+}
 IdentityUser <|-- ApplicationUser
+ApplicationUser --> "Libros<Libro>" "DbSet`1"
 @enduml

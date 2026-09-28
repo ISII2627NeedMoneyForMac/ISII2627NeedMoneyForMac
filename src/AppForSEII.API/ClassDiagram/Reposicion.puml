@@ -3,9 +3,6 @@ class Reposicion {
     + Id : int <<get>> <<set>>
     + PrecioTotal : decimal <<get>> <<set>>
     + Comentario : string? <<get>> <<set>>
-    + Reposicion()
-    + <<override>> Equals(obj:object?) : bool
-    + <<override>> GetHashCode() : int
+    + FechaReposicion : DateTime <<get>> <<set>>
 }
-Reposicion --> "FechaReposicion" DateTime
 @enduml
