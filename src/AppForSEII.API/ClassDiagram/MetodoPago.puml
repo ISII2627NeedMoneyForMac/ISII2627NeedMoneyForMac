@@ -1,0 +1,5 @@
+@startuml
+class MetodoPago {
+    + Id : int <<get>> <<set>>
+}
+@enduml

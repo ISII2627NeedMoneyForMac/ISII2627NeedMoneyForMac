@@ -1,4 +1,5 @@
 @startuml
 hide methods
 !include Subasta.puml
+!include MetodoPago.puml
 @enduml
