@@ -3,5 +3,6 @@
 !include .\\Genero.puml
 !include .\\Libro.puml
 !include .\\Reposicion.puml
+!include .\\ReposicionItem.puml
 !include .\\Subasta.puml
 @enduml
