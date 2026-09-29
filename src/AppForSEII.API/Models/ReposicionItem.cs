@@ -6,6 +6,7 @@ namespace AppForSEII.API.Models
 {
     public class ReposicionItem
     {
+
         [Required]
         public int ReposicionId { get; set; }
 
