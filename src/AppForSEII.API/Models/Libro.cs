@@ -20,13 +20,18 @@ namespace AppForSEII.API.Models
         [Required]
         [DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
-         [System.ComponentModel.DataAnnotations.Display(Name = "FechaLanzamiento")]
+        [System.ComponentModel.DataAnnotations.Display(Name = "FechaLanzamiento")]
         public DateTime FechaLanzamiento { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
         [Range(0.01, 1000.00)]
         public decimal PrecioCompra { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        [Range(0.01, 1000.00)]
+        public decimal PrecioReposicion { get; set; }
 
         [Required]
         [Range(0, int.MaxValue)]
