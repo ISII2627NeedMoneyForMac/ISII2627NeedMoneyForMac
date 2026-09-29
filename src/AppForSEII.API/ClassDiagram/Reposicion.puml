@@ -3,6 +3,6 @@ class Reposicion {
     + Id : int <<get>> <<set>>
     + PrecioTotal : decimal <<get>> <<set>>
     + Comentario : string? <<get>> <<set>>
-    + FechaReposicion : DateTime <<get>> <<set>>
 }
+Reposicion --> "FechaReposicion" DateTime
 @enduml

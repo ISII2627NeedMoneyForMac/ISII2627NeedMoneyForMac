@@ -23,5 +23,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Libro> Libros { get; set; }
 
+    public DbSet<Genero> Generos { get; set; }
+
 
 }
