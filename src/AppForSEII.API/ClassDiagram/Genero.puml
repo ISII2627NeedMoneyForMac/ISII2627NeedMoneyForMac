@@ -1,0 +1,6 @@
+@startuml
+class Genero {
+    + Id : int <<get>> <<set>>
+    + Nombre : string <<get>> <<set>>
+}
+@enduml

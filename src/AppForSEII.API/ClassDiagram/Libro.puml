@@ -5,6 +5,6 @@ class Libro {
     + Autor : string <<get>> <<set>>
     + PrecioCompra : decimal <<get>> <<set>>
     + Stock : int <<get>> <<set>>
-    + FechaLanzamiento : DateTime <<get>> <<set>>
 }
+Libro --> "FechaLanzamiento" DateTime
 @enduml
