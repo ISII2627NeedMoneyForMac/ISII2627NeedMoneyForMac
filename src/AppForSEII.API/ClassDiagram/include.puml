@@ -7,4 +7,5 @@
 !include .\\Reposicion.puml
 !include .\\ReposicionItem.puml
 !include .\\Subasta.puml
+!include .\\SubastaItem.puml
 @enduml

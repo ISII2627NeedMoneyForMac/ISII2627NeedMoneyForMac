@@ -2,4 +2,5 @@
 hide methods
 !include Subasta.puml
 !include MetodoPago.puml
+!include SubastaItem.puml
 @enduml
