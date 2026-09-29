@@ -1,0 +1,12 @@
+@startuml
+class Compra {
+    + Id : int <<get>> <<set>>
+    + PrecioTotal : decimal <<get>> <<set>>
+    + CodigoDescuento : string? <<get>> <<set>>
+    + UsuarioId : string <<get>> <<set>>
+    + MetodoPagoId : int <<get>> <<set>>
+}
+Compra --> "FechaCompra" DateTime
+Compra --> "Usuario" ApplicationUser
+Compra --> "MetodoPago" MetodoPago
+@enduml
