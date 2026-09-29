@@ -4,6 +4,7 @@ class Libro {
     + Titulo : string <<get>> <<set>>
     + Autor : string <<get>> <<set>>
     + PrecioCompra : decimal <<get>> <<set>>
+    + PrecioReposicion : decimal <<get>> <<set>>
     + Stock : int <<get>> <<set>>
 }
 Libro --> "FechaLanzamiento" DateTime

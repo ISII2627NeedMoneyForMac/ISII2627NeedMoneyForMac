@@ -19,6 +19,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<Reposicion> Reposiciones { get; set; }
 
+    public DbSet<ReposicionItem> ReposicionItems { get; set; }
+
     public DbSet<Subasta> Subastas { get; set; }
 
     public DbSet<Libro> Libros { get; set; }

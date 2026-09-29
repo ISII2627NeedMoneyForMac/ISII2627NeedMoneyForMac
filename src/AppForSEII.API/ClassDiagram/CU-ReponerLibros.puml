@@ -2,4 +2,5 @@
 hide methods
 !include Reposicion.puml
 !include ReposicionItem.puml
+!include Libro.puml
 @enduml
