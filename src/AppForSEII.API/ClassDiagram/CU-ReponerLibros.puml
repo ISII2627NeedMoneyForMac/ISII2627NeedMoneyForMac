@@ -1,6 +1,7 @@
 @startuml 
 hide methods
-!include Reposicion.puml
-!include ReposicionItem.puml
 !include Libro.puml
+!include ReposicionItem.puml
+!include Reposicion.puml
+!include Visa.puml
 @enduml
