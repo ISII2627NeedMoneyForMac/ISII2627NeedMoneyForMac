@@ -7,7 +7,7 @@ namespace AppForSEII.API.Models
     public class Visa
     {
         [Required]
-        [CreditCard]
+        [CreditCard] 
         public string NumeroTarjeta { get; set; } = string.Empty;
         [Required]
         [DataType(System.ComponentModel.DataAnnotations.DataType.Date)]

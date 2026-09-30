@@ -2,6 +2,10 @@
 hide methods
 !include Libro.puml
 !include ReposicionItem.puml
+<<<<<<< HEAD
 !include Reposicion.puml
 !include Visa.puml
+=======
+!include Libro.puml
+>>>>>>> development
 @enduml
