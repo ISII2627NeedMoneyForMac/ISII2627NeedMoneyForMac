@@ -1,0 +1,5 @@
+@startuml
+class GooglePay {
+    + Email : int <<get>> <<set>>
+}
+@enduml

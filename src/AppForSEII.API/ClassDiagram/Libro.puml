@@ -1,11 +1,17 @@
 @startuml
 class Libro {
+    + Libro()
+    + Libro(titulo:string, autor:string, fechaLanzamiento:DateTime, precioCompra:decimal, precioReposicion:decimal, stock:int)
     + Id : int <<get>> <<set>>
     + Titulo : string <<get>> <<set>>
     + Autor : string <<get>> <<set>>
     + PrecioCompra : decimal <<get>> <<set>>
     + PrecioReposicion : decimal <<get>> <<set>>
     + Stock : int <<get>> <<set>>
+    + FechaLanzamiento : DateTime <<get>> <<set>>
 }
-Libro --> "FechaLanzamiento" DateTime
+
+Libro --> "Genero" Genero
+Libro --> "Editorial" Editorial
+Libro --> "CompraItems<CompraItem>" "List`1"
 @enduml

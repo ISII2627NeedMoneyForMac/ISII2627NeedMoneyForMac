@@ -35,5 +35,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Visa> Visas { get; set; }
 
+    public DbSet<GooglePay> GooglePays { get; set; }
+
+    //public DbSet<PayPal> PayPals { get; set; }
 
 }
