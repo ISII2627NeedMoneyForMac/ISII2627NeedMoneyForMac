@@ -8,6 +8,6 @@ namespace AppForSEII.API.Models
     {
         [Key]
         public int Email { get; set; }
-
+ 
     }
 }
