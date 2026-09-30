@@ -6,7 +6,6 @@ namespace AppForSEII.API.Models
 {
     public class SubastaItem
     {
-
         [Required]
         public int SubastaId { get; set; }
 

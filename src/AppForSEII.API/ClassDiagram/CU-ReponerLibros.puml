@@ -1,6 +1,11 @@
 @startuml 
 hide methods
-!include Reposicion.puml
-!include ReposicionItem.puml
 !include Libro.puml
+!include ReposicionItem.puml
+<<<<<<< HEAD
+!include Reposicion.puml
+!include Visa.puml
+=======
+!include Libro.puml
+>>>>>>> development
 @enduml

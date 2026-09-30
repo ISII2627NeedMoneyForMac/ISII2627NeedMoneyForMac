@@ -9,4 +9,5 @@
 !include .\\ReposicionItem.puml
 !include .\\Subasta.puml
 !include .\\SubastaItem.puml
+!include .\\Visa.puml
 @enduml
