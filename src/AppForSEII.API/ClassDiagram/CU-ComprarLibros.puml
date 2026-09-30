@@ -2,6 +2,13 @@
 hide methods
 !include Libro.puml
 !include Genero.puml
+!include Editorial.puml
 !include Compra.puml
 !include CompraItem.puml
+!include MetodoPago.puml
+!include Visa.puml
+!include GooglePay.puml
+!include ApplicationUser.puml
+
+
 @enduml

@@ -1,7 +1,14 @@
 @startuml
 class Subasta {
+    + Subasta()
+    + Subasta(id:int, fechaSubasta:DateTime, precioSubasta:double)
     + Id : int <<get>> <<set>>
-    + PrecioSubasta : decimal <<get>> <<set>>
+    + PrecioSubasta : double <<get>> <<set>>
+}
+class "List`1"<T> {
 }
 Subasta --> "FechaSubasta" DateTime
+Subasta --> "SubastaItems<SubastaItem>" "List`1"
+Subasta --> "MetodosPago<MetodoPago>" "List`1"
+Subasta --> "Usuario" ApplicationUser
 @enduml

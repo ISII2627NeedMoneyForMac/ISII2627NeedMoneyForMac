@@ -1,12 +1,18 @@
 @startuml
 class Compra {
+    + Compra()
+    + Compra(fechaCompra:DateTime, precioTotal:decimal, usuarioId:string, metodoPagoId:int, codigoDescuento:string?)
     + Id : int <<get>> <<set>>
     + PrecioTotal : decimal <<get>> <<set>>
-    + CodigoDescuento : string? <<get>> <<set>>
     + UsuarioId : string <<get>> <<set>>
     + MetodoPagoId : int <<get>> <<set>>
+    + CodigoDescuento : string? <<get>> <<set>>
+    + FechaCompra : DateTime <<get>> <<set>>
 }
-Compra --> "FechaCompra" DateTime
+class "List`1"<T> {
+}
+
 Compra --> "Usuario" ApplicationUser
-Compra --> "MetodoPago" MetodoPago
+Compra --> "MetodosPago<MetodoPago>" "List`1"
+Compra --> "CompraItems<CompraItem>" "ICollection`1"
 @enduml
