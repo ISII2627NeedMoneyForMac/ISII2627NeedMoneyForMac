@@ -6,17 +6,29 @@ namespace AppForSEII.API.Models
 {
     public class Subasta
     {
+        //Constructores
+        public Subasta(){ }
+
+        public Subasta(int id, DateTime fechaSubasta, double precioSubasta)
+        {
+            Id = id;
+            FechaSubasta = fechaSubasta;
+            PrecioSubasta = precioSubasta;
+        }
+
+        //Atributos
         [Key]
         public int Id { get; set; }
 
         [Required]
-        [DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
-         [System.ComponentModel.DataAnnotations.Display(Name = "FechaSubasta")]
         public DateTime FechaSubasta { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
-         public decimal PrecioSubasta { get; set; }
+         public double PrecioSubasta { get; set; }
+
+        //Relaciones
+        public List<SubastaItem> SubastaItems { get; set; } 
+        public List<MetodoPago> MetodosPago { get; set; } 
+        public ApplicationUser Usuario { get; set; }
 
     }
 }

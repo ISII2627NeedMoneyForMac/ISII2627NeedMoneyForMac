@@ -6,6 +6,18 @@ namespace AppForSEII.API.Models
 {
     public class SubastaItem
     {
+        //Constructores
+        public SubastaItem(){ }
+
+        public SubastaItem(int subastaId, int libroId, int precioPuja, string? descripcion)
+        {
+            SubastaId = subastaId;
+            LibroId = libroId;
+            PrecioPuja = precioPuja;
+            Descripcion = descripcion;
+        }
+
+        //Atribubtos
         [Required]
         public int SubastaId { get; set; }
 
@@ -13,10 +25,12 @@ namespace AppForSEII.API.Models
         public int LibroId { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue)]
         public int PrecioPuja { get; set; }
 
-        [StringLength(500)]
         public string? Descripcion { get; set; }
+
+        //Relaciones
+        public Libro Libro { get; set; }
+        public Subasta Subasta { get; set; }
     }
 }
