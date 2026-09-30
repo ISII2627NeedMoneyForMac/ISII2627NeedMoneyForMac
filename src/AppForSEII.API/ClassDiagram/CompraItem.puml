@@ -1,0 +1,10 @@
+@startuml
+class CompraItem {
+    + Id : int <<get>> <<set>>
+    + Cantidad : int <<get>> <<set>>
+    + LibroId : int <<get>> <<set>>
+    + CompraId : int <<get>> <<set>>
+}
+CompraItem --> "Libro" Libro
+CompraItem --> "Compra" Compra
+@enduml

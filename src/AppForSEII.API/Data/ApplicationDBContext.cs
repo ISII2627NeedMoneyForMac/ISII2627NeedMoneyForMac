@@ -31,5 +31,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Compra> Compras { get; set; }
 
+    public DbSet<CompraItem> CompraItems { get; set; }
+
 
 }

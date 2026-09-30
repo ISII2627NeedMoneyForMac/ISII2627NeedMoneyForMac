@@ -1,6 +1,7 @@
 @startuml
 !include .\\ApplicationUser.puml
 !include .\\Compra.puml
+!include .\\CompraItem.puml
 !include .\\Genero.puml
 !include .\\Libro.puml
 !include .\\MetodoPago.puml
