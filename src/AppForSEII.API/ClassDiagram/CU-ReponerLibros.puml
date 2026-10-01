@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
 @startuml
 hide methods
 !include Libro.puml
@@ -9,4 +14,9 @@ hide methods
 !include GooglePay.puml
 !include PayPal.puml
 !include ApplicationUser.puml
+<<<<<<< Updated upstream
 @enduml
+=======
+@enduml
+
+>>>>>>> Stashed changes

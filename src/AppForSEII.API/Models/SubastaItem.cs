@@ -6,6 +6,10 @@ namespace AppForSEII.API.Models
 {
     public class SubastaItem
     {
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         //Constructores
         public SubastaItem(){ }
 
@@ -18,6 +22,10 @@ namespace AppForSEII.API.Models
         }
 
         //Atribubtos
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         [Required]
         public int SubastaId { get; set; }
 

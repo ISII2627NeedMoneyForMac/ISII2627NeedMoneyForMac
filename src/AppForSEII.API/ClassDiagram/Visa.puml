@@ -2,6 +2,10 @@
 class Visa {
     + NumeroTarjeta : string <<get>> <<set>>
 }
+<<<<<<< Updated upstream
 Visa --> "FechaCaducidad" DateTime
 MetodoPago <|-- Visa
+=======
+    + NumeroTarjeta : string <<get>> <<set>>
+>>>>>>> Stashed changes
 @enduml
