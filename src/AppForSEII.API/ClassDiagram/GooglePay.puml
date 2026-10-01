@@ -2,4 +2,5 @@
 class GooglePay {
     + Email : int <<get>> <<set>>
 }
+MetodoPago <|-- GooglePay
 @enduml
