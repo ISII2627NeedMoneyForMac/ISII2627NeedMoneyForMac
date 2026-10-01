@@ -1,11 +1,12 @@
-@startuml 
+@startuml
 hide methods
 !include Libro.puml
-!include ReposicionItem.puml
-<<<<<<< HEAD
+!include Genero.puml
 !include Reposicion.puml
+!include ReposicionItem.puml
+!include MetodoPago.puml
 !include Visa.puml
-=======
-!include Libro.puml
->>>>>>> development
+!include GooglePay.puml
+!include PayPal.puml
+!include ApplicationUser.puml
 @enduml
