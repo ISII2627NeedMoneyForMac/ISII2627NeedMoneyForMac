@@ -9,7 +9,7 @@ namespace AppForSEII.API.Models
         //Constructores
         public Editorial(){ }
 
-        public Editorial(int id, int nombre)
+        public Editorial(int id, string nombre)
         {
             Id = id;
             Nombre = nombre;
