@@ -1,6 +1,11 @@
 @startuml
 hide methods
 !include Subasta.puml
-!include MetodoPago.puml
 !include SubastaItem.puml
+!include Editorial.puml
+!include Libro.puml
+!include Visa.puml
+!include GooglePay.puml
+!include PayPal.puml
+!include ApplicationUser.puml
 @enduml

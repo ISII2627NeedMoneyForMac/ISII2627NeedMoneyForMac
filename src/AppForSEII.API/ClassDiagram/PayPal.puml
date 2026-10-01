@@ -1,8 +1,7 @@
 @startuml
 class PayPal {
     + PayPal()
-    + PayPal(id:int, numeroTelefono:string)
-    + Id : int <<get>> <<set>>
+    + PayPal(numeroTelefono:string)
     + NumeroTelefono : string <<get>> <<set>>
 }
 MetodoPago <|-- PayPal

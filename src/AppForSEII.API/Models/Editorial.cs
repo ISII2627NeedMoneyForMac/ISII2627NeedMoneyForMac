@@ -20,7 +20,7 @@ namespace AppForSEII.API.Models
         public int Id { get; set; }
 
         [Required]
-        public int Nombre { get; set; }
+        public string Nombre { get; set; }
 
         //Relaciones
         public List<Libro> Libros { get; set; } 

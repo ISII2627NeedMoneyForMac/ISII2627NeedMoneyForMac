@@ -1,5 +1,12 @@
 @startuml
 class MetodoPago {
+    + MetodoPago()
+    + MetodoPago(id:int)
     + Id : int <<get>> <<set>>
 }
+class "List`1"<T> {
+}
+MetodoPago --> "Compras<Compra>" "List`1"
+MetodoPago --> "Reposiciones<Reposicion>" "List`1"
+MetodoPago --> "Subastas<Subasta>" "List`1"
 @enduml

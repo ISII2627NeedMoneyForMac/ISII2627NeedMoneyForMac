@@ -4,11 +4,13 @@ class Subasta {
     + Subasta(id:int, fechaSubasta:DateTime, precioSubasta:double)
     + Id : int <<get>> <<set>>
     + PrecioSubasta : double <<get>> <<set>>
+    + FechaSubasta : DateTime <<get>> <<set>>
+}
+class "IList`1"<T> {
 }
 class "List`1"<T> {
 }
-Subasta --> "FechaSubasta" DateTime
-Subasta --> "SubastaItems<SubastaItem>" "List`1"
+Subasta --> "SubastaItems<SubastaItem>" "IList`1"
 Subasta --> "MetodosPago<MetodoPago>" "List`1"
 Subasta --> "Usuario" ApplicationUser
 @enduml

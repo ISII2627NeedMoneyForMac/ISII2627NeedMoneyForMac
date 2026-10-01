@@ -32,6 +32,6 @@ namespace AppForSEII.API.Models
 
         public List<MetodoPago>? MetodosPago { get; set; }
 
-        public ICollection<ReposicionItem>? ReposicionItems { get; set; }
+        public IList<ReposicionItem>? ReposicionItems { get; set; }
     }
 }

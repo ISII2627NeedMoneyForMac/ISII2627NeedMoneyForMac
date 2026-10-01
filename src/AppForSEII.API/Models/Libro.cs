@@ -50,5 +50,7 @@ namespace AppForSEII.API.Models
         public Editorial Editorial { get; set; }
 
         public List<CompraItem>? CompraItems { get; set; }
+
+        public IList<ReposicionItem>? ReposicionItems { get; set; }
     }
 }

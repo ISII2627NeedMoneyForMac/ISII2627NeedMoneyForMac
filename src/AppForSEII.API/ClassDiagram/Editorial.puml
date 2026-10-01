@@ -3,7 +3,7 @@ class Editorial {
     + Editorial()
     + Editorial(id:int, nombre:int)
     + Id : int <<get>> <<set>>
-    + Nombre : int <<get>> <<set>>
+    + Nombre : string <<get>> <<set>>
 }
 class "List`1"<T> {
 }
