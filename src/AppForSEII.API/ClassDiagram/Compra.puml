@@ -7,11 +7,10 @@ class Compra {
     + UsuarioId : string <<get>> <<set>>
     + MetodoPagoId : int <<get>> <<set>>
     + CodigoDescuento : string? <<get>> <<set>>
-    + FechaCompra : DateTime <<get>> <<set>>
 }
 class "List`1"<T> {
 }
-
+Compra --> "FechaCompra" DateTime
 Compra --> "Usuario" ApplicationUser
 Compra --> "MetodosPago<MetodoPago>" "List`1"
 Compra --> "CompraItems<CompraItem>" "ICollection`1"

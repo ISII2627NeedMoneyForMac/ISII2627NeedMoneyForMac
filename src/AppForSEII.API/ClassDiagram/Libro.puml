@@ -8,9 +8,8 @@ class Libro {
     + PrecioCompra : decimal <<get>> <<set>>
     + PrecioReposicion : decimal <<get>> <<set>>
     + Stock : int <<get>> <<set>>
-    + FechaLanzamiento : DateTime <<get>> <<set>>
 }
-
+Libro --> "FechaLanzamiento" DateTime
 Libro --> "Genero" Genero
 Libro --> "Editorial" Editorial
 Libro --> "CompraItems<CompraItem>" "List`1"
