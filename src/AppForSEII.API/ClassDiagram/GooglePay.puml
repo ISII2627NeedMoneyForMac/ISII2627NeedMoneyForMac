@@ -1,6 +1,7 @@
 @startuml
 class GooglePay {
+    + GooglePay()
+    + GooglePay(email:int)
     + Email : int <<get>> <<set>>
 }
-MetodoPago <|-- GooglePay
 @enduml

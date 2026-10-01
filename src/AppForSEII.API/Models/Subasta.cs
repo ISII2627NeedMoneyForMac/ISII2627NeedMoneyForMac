@@ -26,7 +26,7 @@ namespace AppForSEII.API.Models
          public double PrecioSubasta { get; set; }
 
         //Relaciones
-        public List<SubastaItem> SubastaItems { get; set; } 
+        public IList<SubastaItem> SubastaItems { get; set; } 
         public List<MetodoPago> MetodosPago { get; set; } 
         public ApplicationUser Usuario { get; set; }
 

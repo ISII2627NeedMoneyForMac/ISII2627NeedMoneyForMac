@@ -8,6 +8,7 @@ hide methods
 !include MetodoPago.puml
 !include Visa.puml
 !include GooglePay.puml
+!include PayPal.puml
 !include ApplicationUser.puml
 
 

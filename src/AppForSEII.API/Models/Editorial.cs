@@ -9,7 +9,7 @@ namespace AppForSEII.API.Models
         //Constructores
         public Editorial(){ }
 
-        public Editorial(int id, int nombre)
+        public Editorial(int id, string nombre)
         {
             Id = id;
             Nombre = nombre;
@@ -20,7 +20,7 @@ namespace AppForSEII.API.Models
         public int Id { get; set; }
 
         [Required]
-        public int Nombre { get; set; }
+        public string Nombre { get; set; }
 
         //Relaciones
         public List<Libro> Libros { get; set; } 
