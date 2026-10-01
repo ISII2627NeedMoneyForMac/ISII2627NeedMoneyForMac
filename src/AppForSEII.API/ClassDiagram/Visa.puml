@@ -3,4 +3,5 @@ class Visa {
     + NumeroTarjeta : string <<get>> <<set>>
 }
 Visa --> "FechaCaducidad" DateTime
+MetodoPago <|-- Visa
 @enduml

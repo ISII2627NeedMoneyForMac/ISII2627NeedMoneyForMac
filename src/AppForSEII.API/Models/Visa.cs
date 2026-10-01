@@ -6,6 +6,16 @@ namespace AppForSEII.API.Models
 {
     public class Visa
     {
+        public Visa()
+        {
+        }
+
+        public Visa(string numeroTarjeta, DateTime fechaCaducidad)
+        {
+            NumeroTarjeta = numeroTarjeta;
+            FechaCaducidad = fechaCaducidad;
+        }
+
         [Required]
         [CreditCard] 
         public string NumeroTarjeta { get; set; } = string.Empty;
