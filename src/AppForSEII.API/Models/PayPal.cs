@@ -10,19 +10,14 @@ namespace AppForSEII.API.Models
         public PayPal() { }
 
         // Constructor parametrizado
-        public PayPal(int id,string numeroTelefono)
+        public PayPal(string numeroTelefono)
         {
-            Id = id;
             NumeroTelefono = numeroTelefono;
         }
 
         // Atributos
-
-        [Key]
-        public int Id { get; set; }
-        
         [Required]
         [Phone]
         public string NumeroTelefono { get; set; }
-        }
+    }
 }
