@@ -18,6 +18,7 @@ namespace AppForSEII.API.Models
         }
 
         //Atribubtos
+        [Key]
         [Required]
         public int SubastaId { get; set; }
 
