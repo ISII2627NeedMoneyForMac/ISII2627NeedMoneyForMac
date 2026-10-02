@@ -16,6 +16,7 @@ namespace AppForSEII.API.Models
             FechaCaducidad = fechaCaducidad;
         }
 
+        [Key]
         [Required]
         [CreditCard] 
         public string NumeroTarjeta { get; set; } = string.Empty;

@@ -18,11 +18,13 @@ namespace AppForSEII.API.Models
 
         //Atributos
         [Key]
+        [Required]
         public int Id { get; set; }
 
         [Required]
         public DateTime FechaSubasta { get; set; }
 
+        [Required]
          public double PrecioSubasta { get; set; }
 
         //Relaciones

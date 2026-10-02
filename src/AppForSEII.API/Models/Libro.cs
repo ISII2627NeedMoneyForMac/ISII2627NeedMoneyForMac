@@ -21,6 +21,7 @@ namespace AppForSEII.API.Models
 
         //Atributos
         [Key]
+        [Required]
         public int Id { get; set; }
 
         [Required]
@@ -33,11 +34,9 @@ namespace AppForSEII.API.Models
         public DateTime FechaLanzamiento { get; set; }
 
         [Required]
-      
         public decimal PrecioCompra { get; set; }
 
         [Required]
-       
         public decimal PrecioReposicion { get; set; }
 
         [Required]
@@ -45,6 +44,7 @@ namespace AppForSEII.API.Models
 
 
         //Relaciones
+        [Required]
         public Genero Genero { get; set; }
 
         public Editorial Editorial { get; set; }

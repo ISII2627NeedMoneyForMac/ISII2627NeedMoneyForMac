@@ -17,6 +17,7 @@ namespace AppForSEII.API.Models
             CantidadReposicion = cantidadReposicion;
         }
 
+        [Key]
         [Required]
         public int ReposicionId { get; set; }
 
