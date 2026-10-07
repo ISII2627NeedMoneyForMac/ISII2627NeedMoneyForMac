@@ -20,10 +20,9 @@ namespace AppForSEII.API.Models
         }
 
         //Atribubtos
-        [Required]
+        
         public int SubastaId { get; set; }
 
-        [Required]
         public int LibroId { get; set; }
 
         [Required]
