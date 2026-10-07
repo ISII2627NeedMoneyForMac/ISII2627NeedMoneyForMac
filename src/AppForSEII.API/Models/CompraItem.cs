@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppForSEII.API.Models
 {
+
+    [PrimaryKey(nameof(CompraId), nameof(LibroId))]
     public class CompraItem
     {
         //Constructores
@@ -17,9 +19,6 @@ namespace AppForSEII.API.Models
         }
 
         //Atributos
-        [Key]
-        public int Id { get; set; }
-
         public int LibroId { get; set; }
 
         public int CompraId { get; set; }

@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppForSEII.API.Models
 {
+
+    [PrimaryKey(nameof(ReposicionId), nameof(LibroId))]
     public class ReposicionItem
     {
         public ReposicionItem()
@@ -17,7 +19,6 @@ namespace AppForSEII.API.Models
             CantidadReposicion = cantidadReposicion;
         }
 
-        [Key]
         [Required]
         public int ReposicionId { get; set; }
 

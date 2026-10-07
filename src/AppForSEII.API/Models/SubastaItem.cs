@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppForSEII.API.Models
 {
+
+    [PrimaryKey(nameof(SubastaId), nameof(LibroId))]
     public class SubastaItem
     {
         //Constructores
@@ -18,7 +20,6 @@ namespace AppForSEII.API.Models
         }
 
         //Atribubtos
-        [Key]
         [Required]
         public int SubastaId { get; set; }
 
