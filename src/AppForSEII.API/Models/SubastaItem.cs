@@ -23,6 +23,7 @@ namespace AppForSEII.API.Models
         
         public int SubastaId { get; set; }
 
+
         public int LibroId { get; set; }
 
         [Required]
@@ -31,7 +32,7 @@ namespace AppForSEII.API.Models
         public string? Descripcion { get; set; }
 
         //Relaciones
-        public Libro Libro { get; set; }
-        public Subasta Subasta { get; set; }
+        public Libro Libro { get; set; } = null!;
+        public Subasta Subasta { get; set; } = null!;
     }
 }
