@@ -8,4 +8,5 @@ hide methods
 !include GooglePay.puml
 !include PayPal.puml
 !include ApplicationUser.puml
+!include MetodoPago.puml
 @enduml
