@@ -9,7 +9,7 @@ namespace AppForSEII.API.Models
         //Constructores
         public Libro() { }
 
-        public Libro(string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock, string tipoLibro)
+        public Libro(string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock)
         {
             Titulo = titulo;
             Autor = autor;
@@ -17,7 +17,6 @@ namespace AppForSEII.API.Models
             PrecioCompra = precioCompra;
             PrecioReposicion = precioReposicion;
             Stock = stock;
-            TipoLibro = tipoLibro;
         }
 
         //Atributos
