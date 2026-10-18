@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using AppForSEII.API.DTOs.LibroDTOs;
 
 namespace AppForSEII.API.Controllers
 {
@@ -19,9 +20,25 @@ namespace AppForSEII.API.Controllers
         }
 
         /// <summary>
-        /// Busca libros por título, autor y/o tipo. Todos los filtros son opcionales.
-        /// Sirve de base para las pantallas de compra, subasta y reposición.
+        /// Devuelve los ítems de reposición, con el libro al que corresponde cada uno
+        /// y la cantidad que hay que reponer.
         /// </summary>
+[HttpGet]
+[Route("[action]")]
+[ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+public async Task<ActionResult> GetLibrosParaReponer()
+{
+    IList<LibroParaReponerDTO> libros = await _context.ReposicionItems
+        .OrderByDescending(ri => ri.CantidadReposicion)
+        .Select(ri => new LibroParaReponerDTO(
+            ri.LibroId,
+            ri.Libro.Titulo,
+            ri.Libro.Autor,
+            ri.CantidadReposicion))
+        .ToListAsync();
+
+    return Ok(libros);
+}
 
     }
 }
