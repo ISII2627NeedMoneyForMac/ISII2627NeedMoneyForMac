@@ -42,7 +42,6 @@ namespace AppForSEII.API.Models
         [Required]
         public int Stock { get; set; }
 
-
         //Relaciones
         [Required]
         public Genero Genero { get; set; }

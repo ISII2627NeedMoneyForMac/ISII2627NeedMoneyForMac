@@ -41,4 +41,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PayPal> PayPals { get; set; }
 
+    public DbSet<SubastaItem> SubastaItems { get; set; }
+
 }
