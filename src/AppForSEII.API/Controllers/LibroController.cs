@@ -40,5 +40,31 @@ public async Task<ActionResult> GetLibrosParaReponer()
     return Ok(libros);
 }
 
+
+        /// <summary>
+        /// Devuelve los libros que se pueden comprar (con stock disponible),
+        /// opcionalmente filtrados por título y género, ordenados por título.
+        /// </summary>
+        [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(IList<LibroParaComprarDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaComprar(string? tituloLibro, string? generoLibro)
+        {
+            IList<LibroParaComprarDTO> libros = await _context.Libros
+                .Where(l => l.Stock > 0
+                    && (tituloLibro == null || l.Titulo.Contains(tituloLibro))
+                    && (generoLibro == null || l.Genero.Nombre.Equals(generoLibro)))
+                .OrderBy(l => l.Titulo)
+                .Select(l => new LibroParaComprarDTO(
+                    l.Id,
+                    l.Titulo,
+                    l.Autor,
+                    l.Genero.Nombre,
+                    l.FechaLanzamiento,
+                    l.PrecioCompra))
+                .ToListAsync();
+
+            return Ok(libros);
+        }
     }
 }
