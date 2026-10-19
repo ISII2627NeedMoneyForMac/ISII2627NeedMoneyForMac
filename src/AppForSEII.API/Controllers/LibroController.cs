@@ -23,22 +23,22 @@ namespace AppForSEII.API.Controllers
         /// Devuelve los ítems de reposición, con el libro al que corresponde cada uno
         /// y la cantidad que hay que reponer.
         /// </summary>
-[HttpGet]
-[Route("[action]")]
-[ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
-public async Task<ActionResult> GetLibrosParaReponer()
-{
-    IList<LibroParaReponerDTO> libros = await _context.ReposicionItems
-        .OrderByDescending(ri => ri.CantidadReposicion)
-        .Select(ri => new LibroParaReponerDTO(
-            ri.LibroId,
-            ri.Libro.Titulo,
-            ri.Libro.Autor,
-            ri.CantidadReposicion))
-        .ToListAsync();
+        [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaReponer()
+        {
+          IList<LibroParaReponerDTO> libros = await _context.ReposicionItems
+                .OrderByDescending(ri => ri.CantidadReposicion)
+                .Select(ri => new LibroParaReponerDTO(
+                    ri.LibroId,
+                    ri.Libro.Titulo,
+                    ri.Libro.Autor,
+                    ri.CantidadReposicion))
+            .ToListAsync();
 
-    return Ok(libros);
-}
+        return Ok(libros);
+        }
 
 
         /// <summary>
@@ -66,5 +66,30 @@ public async Task<ActionResult> GetLibrosParaReponer()
 
             return Ok(libros);
         }
+
+        /// <summary>
+        /// Devuelve los libros que están en subasta, con el precio de puja
+        /// y la descripción de cada ítem, ordenados por título.
+        /// </summary>
+        [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(IList<LibroParaSubastarDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetLibrosParaSubastar()
+        {
+        IList<LibroParaSubastarDTO> libros = await _context.SubastaItems
+               .OrderBy(si => si.Libro.Titulo)
+               .Select(si => new LibroParaSubastarDTO(
+                   si.LibroId,
+                   si.Libro.Titulo,
+                   si.Libro.Autor,
+                   si.Libro.Genero.Nombre,
+                   si.Libro.FechaLanzamiento,
+               si.PrecioPuja,
+                   si.Descripcion))
+              .ToListAsync();
+
+       return Ok(libros);
+        }
     }
+
 }
