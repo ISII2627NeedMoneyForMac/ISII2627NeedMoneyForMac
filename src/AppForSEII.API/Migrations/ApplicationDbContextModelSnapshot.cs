@@ -222,6 +222,10 @@ namespace AppForSEII.API.Migrations
                     b.Property<int>("Stock")
                         .HasColumnType("int");
 
+                    b.Property<string>("TipoLibro")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -346,7 +350,7 @@ namespace AppForSEII.API.Migrations
 
                     b.HasIndex("LibroId");
 
-                    b.ToTable("SubastaItem");
+                    b.ToTable("SubastaItems");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>

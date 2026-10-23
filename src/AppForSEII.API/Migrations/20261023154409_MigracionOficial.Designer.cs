@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppForSEII.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261007180847_CreateIdentitySchema")]
-    partial class CreateIdentitySchema
+    [Migration("20261023154409_MigracionOficial")]
+    partial class MigracionOficial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -225,6 +225,10 @@ namespace AppForSEII.API.Migrations
                     b.Property<int>("Stock")
                         .HasColumnType("int");
 
+                    b.Property<string>("TipoLibro")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -349,7 +353,7 @@ namespace AppForSEII.API.Migrations
 
                     b.HasIndex("LibroId");
 
-                    b.ToTable("SubastaItem");
+                    b.ToTable("SubastaItems");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>

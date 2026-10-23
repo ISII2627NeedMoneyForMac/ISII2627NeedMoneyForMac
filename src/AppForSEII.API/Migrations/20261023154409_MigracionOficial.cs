@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AppForSEII.API.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateIdentitySchema : Migration
+    public partial class MigracionOficial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -299,6 +299,7 @@ namespace AppForSEII.API.Migrations
                     PrecioCompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PrecioReposicion = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Stock = table.Column<int>(type: "int", nullable: false),
+                    TipoLibro = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     GeneroId = table.Column<int>(type: "int", nullable: false),
                     EditorialId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -442,7 +443,7 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SubastaItem",
+                name: "SubastaItems",
                 columns: table => new
                 {
                     SubastaId = table.Column<int>(type: "int", nullable: false),
@@ -452,15 +453,15 @@ namespace AppForSEII.API.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SubastaItem", x => new { x.SubastaId, x.LibroId });
+                    table.PrimaryKey("PK_SubastaItems", x => new { x.SubastaId, x.LibroId });
                     table.ForeignKey(
-                        name: "FK_SubastaItem_Libros_LibroId",
+                        name: "FK_SubastaItems_Libros_LibroId",
                         column: x => x.LibroId,
                         principalTable: "Libros",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_SubastaItem_Subastas_SubastaId",
+                        name: "FK_SubastaItems_Subastas_SubastaId",
                         column: x => x.SubastaId,
                         principalTable: "Subastas",
                         principalColumn: "Id",
@@ -552,8 +553,8 @@ namespace AppForSEII.API.Migrations
                 column: "LibroId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubastaItem_LibroId",
-                table: "SubastaItem",
+                name: "IX_SubastaItems_LibroId",
+                table: "SubastaItems",
                 column: "LibroId");
 
             migrationBuilder.CreateIndex(
@@ -599,7 +600,7 @@ namespace AppForSEII.API.Migrations
                 name: "ReposicionItems");
 
             migrationBuilder.DropTable(
-                name: "SubastaItem");
+                name: "SubastaItems");
 
             migrationBuilder.DropTable(
                 name: "Visas");
