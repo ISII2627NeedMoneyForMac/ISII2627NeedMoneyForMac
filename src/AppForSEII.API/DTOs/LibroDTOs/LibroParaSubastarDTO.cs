@@ -9,7 +9,7 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         {
         }
 
-        public LibroParaSubastarDTO(int id, string titulo, string autor, string genero, DateTime fechaLanzamiento, int precioPuja, string? descripcion)
+        public LibroParaSubastarDTO(int id, string titulo, string autor, string genero, DateTime fechaLanzamiento, int precioPuja, string tipolibro, string? descripcion)
         {
             Id = id;
             Titulo = titulo;
@@ -17,6 +17,7 @@ namespace AppForSEII.API.DTOs.LibroDTOs
             Genero = genero;
             FechaLanzamiento = fechaLanzamiento;
             PrecioPuja = precioPuja;
+            TipoLibro = tipolibro;
             Descripcion = descripcion;
         }
 
@@ -37,6 +38,10 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         [Range(0, int.MaxValue, ErrorMessage = "El precio de puja no puede ser negativo")]
         public int PrecioPuja { get; set; }
 
+        [Required]
+        [StringLength(100, ErrorMessage = "El tipo de libro debe tener un máximo de 100 caracteres")]
+        public string TipoLibro { get; set; } = "Tipo de Libro";
+
         [StringLength(500, ErrorMessage = "La descripción debe tener un máximo de 500 caracteres")]
         public string? Descripcion { get; set; }
 
@@ -49,12 +54,13 @@ namespace AppForSEII.API.DTOs.LibroDTOs
                    Genero == dto.Genero &&
                    FechaLanzamiento == dto.FechaLanzamiento &&
                    PrecioPuja == dto.PrecioPuja &&
+                   TipoLibro == dto.TipoLibro &&
                    Descripcion == dto.Descripcion;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, Titulo, Autor, Genero, FechaLanzamiento, PrecioPuja, Descripcion);
+            return HashCode.Combine(Id, Titulo, Autor, Genero, FechaLanzamiento, PrecioPuja, TipoLibro, Descripcion);
         }
     }
 }

@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Identity;
+using AppForSEII.API.Models;
+
 namespace AppForSEII.API.Data {
     public class SeedData {
         public static void Initialize(ApplicationDbContext dbContext, IServiceProvider serviceProvider, ILogger logger) {
@@ -103,14 +106,14 @@ namespace AppForSEII.API.Data {
             dbcontext.SaveChanges();
 
             if (dbcontext.Libros.FirstOrDefault(l => l.Titulo == "Cien años de soledad") == null) {
-                var libro = new Libro("Cien años de soledad", "Gabriel García Márquez", new DateTime(1967, 5, 30), 15.95m, 12.00m, 20);
+                var libro = new Libro("Cien años de soledad", "Gabriel García Márquez", new DateTime(1967, 5, 30), 15.95m, 12.00m, 20, "Físico");
                 libro.Genero = generoNovela;
                 libro.Editorial = editorialPlaneta;
                 dbcontext.Libros.Add(libro);
             }
 
             if (dbcontext.Libros.FirstOrDefault(l => l.Titulo == "Fundación") == null) {
-                var libro = new Libro("Fundación", "Isaac Asimov", new DateTime(1951, 6, 1), 9.95m, 7.50m, 15);
+                var libro = new Libro("Fundación", "Isaac Asimov", new DateTime(1951, 6, 1), 9.95m, 7.50m, 15, "Digital");
                 libro.Genero = generoCiencia;
                 libro.Editorial = editorialPlaneta;
                 dbcontext.Libros.Add(libro);

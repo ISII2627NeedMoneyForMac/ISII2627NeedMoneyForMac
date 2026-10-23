@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Humanizer;
 
 namespace AppForSEII.API.Models
 {
@@ -9,7 +10,7 @@ namespace AppForSEII.API.Models
         //Constructores
         public Libro() { }
 
-        public Libro(string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock)
+        public Libro(string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock, string tipolibro)
         {
             Titulo = titulo;
             Autor = autor;
@@ -17,6 +18,7 @@ namespace AppForSEII.API.Models
             PrecioCompra = precioCompra;
             PrecioReposicion = precioReposicion;
             Stock = stock;
+            TipoLibro = tipolibro;
         }
 
         //Atributos
@@ -41,6 +43,9 @@ namespace AppForSEII.API.Models
 
         [Required]
         public int Stock { get; set; }
+
+        [Required]
+        public string TipoLibro { get; set; }
 
         //Relaciones
         [Required]
