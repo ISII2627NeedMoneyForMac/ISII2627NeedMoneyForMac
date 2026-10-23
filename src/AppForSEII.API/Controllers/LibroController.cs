@@ -84,7 +84,8 @@ namespace AppForSEII.API.Controllers
                    si.Libro.Autor,
                    si.Libro.Genero.Nombre,
                    si.Libro.FechaLanzamiento,
-               si.PrecioPuja,
+                   si.PrecioPuja,
+                   si.Libro.TipoLibro,
                    si.Descripcion))
               .ToListAsync();
 
