@@ -8,6 +8,13 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         public LibroParaReponerDTO()
         {
         }
+        public LibroParaReponerDTO(int id, string titulo, string autor, decimal precioReposicion)
+        {
+            Id = id;
+            Titulo = titulo;
+            Autor = autor;
+            PrecioReposicion = precioReposicion;
+        }
 
         public LibroParaReponerDTO(int id, string titulo, string genero, DateTime fechaLanzamiento, decimal precioReposicion, string autor)
         {
