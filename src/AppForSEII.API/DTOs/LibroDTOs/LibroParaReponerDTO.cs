@@ -9,12 +9,14 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         {
         }
 
-        public LibroParaReponerDTO(int id, string titulo, string autor, int cantidadReposicion)
+        public LibroParaReponerDTO(int id, string titulo, string genero, DateTime fechaLanzamiento, decimal precioReposicion, string autor)
         {
             Id = id;
             Titulo = titulo;
+            Genero = genero;
+            FechaLanzamiento = fechaLanzamiento;
+            PrecioReposicion = precioReposicion;
             Autor = autor;
-            CantidadReposicion = cantidadReposicion;
         }
 
         public int Id { get; set; }
@@ -22,25 +24,32 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         [StringLength(100, ErrorMessage = "El título debe tener un máximo de 100 caracteres")]
         public string Titulo { get; set; } = "Título";
 
+        [StringLength(50, ErrorMessage = "El género debe tener un máximo de 50 caracteres")]
+        public string Genero { get; set; } = "Género";
+
+        [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
+        public DateTime FechaLanzamiento { get; set; } = DateTime.Today;
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "El precio de reposición debe ser mayor que 0")]
+        public decimal PrecioReposicion { get; set; } = 0.01m;
+
         [StringLength(100, ErrorMessage = "El autor debe tener un máximo de 100 caracteres")]
         public string Autor { get; set; } = "Autor";
-
-        [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "La cantidad mínima a reponer es 1")]
-        public int CantidadReposicion { get; set; } = 1;
 
         public override bool Equals(object? obj)
         {
             return obj is LibroParaReponerDTO dto &&
                    Id == dto.Id &&
                    Titulo == dto.Titulo &&
-                   Autor == dto.Autor &&
-                   CantidadReposicion == dto.CantidadReposicion;
+                   Genero == dto.Genero &&
+                   FechaLanzamiento == dto.FechaLanzamiento &&
+                   PrecioReposicion == dto.PrecioReposicion &&
+                   Autor == dto.Autor;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, Titulo, Autor, CantidadReposicion);
+            return HashCode.Combine(Id, Titulo, Genero, FechaLanzamiento, PrecioReposicion, Autor);
         }
     }
 }
