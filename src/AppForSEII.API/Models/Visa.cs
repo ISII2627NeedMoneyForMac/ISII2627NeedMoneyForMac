@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppForSEII.API.Models
 {
-    public class Visa
+    public class Visa: MetodoPago
     {
         public Visa()
         {

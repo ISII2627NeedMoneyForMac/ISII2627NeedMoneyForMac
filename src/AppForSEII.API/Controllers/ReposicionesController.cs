@@ -79,5 +79,122 @@ namespace AppForSEII.API.Controllers
 
             return Ok(reposicion);
         }
+
+        [HttpPost]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(ReposicionDetailDTO), (int)HttpStatusCode.Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.Conflict)]
+        public async Task<ActionResult> CreateReposicion(ReposicionForCreateDTO reposicionForCreate)
+        {
+            // Las validaciones definidas en ReposicionForCreateDTO (datos obligatorios, comentario
+            // entre 20 y 100 caracteres, cantidad mayor que 1...) se comprueban antes de ejecutar el método
+
+            if (reposicionForCreate.ReposicionItems.Count == 0)
+                ModelState.AddModelError("ReposicionItems", "Error! Debes incluir al menos un libro para reponer");
+
+            var user = _context.ApplicationUsers.FirstOrDefault(au => au.UserName == reposicionForCreate.UserName);
+            if (user == null)
+                ModelState.AddModelError("ReposicionApplicationUser", "Error! El nombre de usuario no está registrado");
+
+            if (ModelState.ErrorCount > 0)
+                return BadRequest(new ValidationProblemDetails(ModelState));
+
+            var libroIds = reposicionForCreate.ReposicionItems.Select(ri => ri.LibroId).ToList<int>();
+
+            var libros = _context.Libros
+                .Where(l => libroIds.Contains(l.Id))
+                .ToList();
+
+            // el método de pago concreto depende del tipo elegido (Visa, GooglePay o PayPal)
+            MetodoPago metodoPago = reposicionForCreate.MetodoPago switch
+            {
+                MetodoPagoTipos.Visa => new Visa(),
+                MetodoPagoTipos.GooglePay => new GooglePay(),
+                _ => new PayPal()
+            };
+
+            var reposicion = new Reposicion
+            {
+                FechaReposicion = DateTime.Now,
+                Comentario = reposicionForCreate.Comentario,
+                Usuario = user,
+                MetodosPago = new List<MetodoPago> { metodoPago },
+                ReposicionItems = new List<ReposicionItem>()
+            };
+
+            foreach (var item in reposicionForCreate.ReposicionItems)
+            {
+                var libro = libros.FirstOrDefault(l => l.Id == item.LibroId);
+
+                if (libro == null)
+                {
+                    ModelState.AddModelError("ReposicionItems", $"Error! El libro con id {item.LibroId} no existe");
+                }
+                else
+                {
+                    // la reposición todavía no existe en la base de datos y no tiene un Id válido,
+                    // así que relacionamos el item con el objeto reposicion
+                    reposicion.ReposicionItems!.Add(new ReposicionItem
+                    {
+                        LibroId = libro.Id,
+                        Reposicion = reposicion,
+                        CantidadReposicion = item.CantidadReposicion
+                    });
+
+                    // completamos el item con los datos reales del libro
+                    item.Titulo = libro.Titulo;
+                    item.Autor = libro.Autor;
+                    item.PrecioReposicion = libro.PrecioReposicion;
+                }
+            }
+
+            // si algún libro no existe
+            if (ModelState.ErrorCount > 0)
+                return BadRequest(new ValidationProblemDetails(ModelState));
+
+            reposicion.PrecioTotal = reposicionForCreate.TotalPrice;
+
+            // datos que el usuario introduce en la reposición
+            user!.Name = reposicionForCreate.Nombre;
+            user.Surname = $"{reposicionForCreate.Apellido1} {reposicionForCreate.Apellido2}";
+            user.PhoneNumber = reposicionForCreate.Telefono;
+
+            // al reponer, el stock de cada libro aumenta con la cantidad repuesta
+            foreach (var item in reposicionForCreate.ReposicionItems)
+            {
+                var libro = libros.First(l => l.Id == item.LibroId);
+                libro.Stock += item.CantidadReposicion;
+            }
+
+            _context.Add(reposicion);
+
+            try
+            {
+                // guardamos en la base de datos la reposición y sus items
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                ModelState.AddModelError("Reposicion", "Error! Ha ocurrido un error al guardar la reposición, inténtalo de nuevo más tarde");
+                return Conflict("Error" + ex.Message);
+            }
+
+            // devolvemos el detalle de la reposición (el recibo)
+            var reposicionDetail = new ReposicionDetailDTO(
+                reposicion.Id,
+                reposicion.FechaReposicion,
+                reposicionForCreate.UserName,
+                reposicionForCreate.Nombre,
+                reposicionForCreate.Apellido1,
+                reposicionForCreate.Apellido2,
+                reposicionForCreate.Telefono,
+                reposicionForCreate.MetodoPago,
+                reposicionForCreate.Comentario,
+                reposicionForCreate.ReposicionItems);
+
+            return CreatedAtAction("GetDetailsForReposiciones", new { id = reposicion.Id }, reposicionDetail);
         }
-        }
+    }
+}
