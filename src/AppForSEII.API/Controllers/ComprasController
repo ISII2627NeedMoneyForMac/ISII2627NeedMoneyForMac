@@ -1,0 +1,65 @@
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
+using AppForSEII.API.DTOs.CompraDTOs;
+using AppForSEII.API.Models;
+
+namespace AppForSEII.API.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ComprasController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<ComprasController> _logger;
+
+        public ComprasController(ApplicationDbContext context, ILogger<ComprasController> logger)
+        {
+            _context = context;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Devuelve el detalle de una compra: datos del cliente, fecha, precio total,
+        /// método de pago, código de descuento y libros comprados.
+        /// </summary>
+        [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(ComprasDetailDTO), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult> GetDetailsForCompras(int id)
+        {
+            ComprasDetailDTO? compra = await _context.Compras
+                .Where(c => c.Id == id)
+                .Select(c => new ComprasDetailDTO(
+                    c.Id,
+                    c.Usuario.Name,
+                    c.Usuario.Surname,
+                    c.Usuario.Direccion,
+                    c.Usuario.PhoneNumber,
+                    c.FechaCompra,
+                    c.PrecioTotal,
+                    c.MetodoPago is Visa ? "Visa" : c.MetodoPago is GooglePay ? "GooglePay" : "PayPal",
+                    c.CodigoDescuento,
+                    c.CompraItems!
+                        .Select(ci => new CompraItemDTO(
+                            ci.LibroId,
+                            ci.Libro.Titulo,
+                            ci.Libro.Genero.Nombre,
+                            ci.Libro.Editorial.Nombre,
+                            ci.Libro.PrecioCompra,
+                            ci.Cantidad))
+                        .ToList()))
+                .FirstOrDefaultAsync();
+
+            if (compra == null)
+            {
+                _logger.LogError($"{DateTime.Now} Error: la compra con id {id} no existe");
+                return NotFound();
+            }
+
+            return Ok(compra);
+        }
+    }
+}
