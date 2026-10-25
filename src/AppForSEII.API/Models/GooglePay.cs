@@ -15,7 +15,7 @@ namespace AppForSEII.API.Models
             Email = email;
         }
 
-        [Key]
+    
         public string Email { get; set; } = string.Empty;
     }
 }
