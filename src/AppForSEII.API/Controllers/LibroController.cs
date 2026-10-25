@@ -73,25 +73,37 @@ namespace AppForSEII.API.Controllers
         /// y la descripción de cada ítem, ordenados por título.
         /// </summary>
         [HttpGet]
-        [Route("[action]")]
-        [ProducesResponseType(typeof(IList<LibroParaSubastarDTO>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetLibrosParaSubastar()
-        {
-        IList<LibroParaSubastarDTO> libros = await _context.SubastaItems
-               .OrderBy(si => si.Libro.Titulo)
-               .Select(si => new LibroParaSubastarDTO(
-                   si.LibroId,
-                   si.Libro.Titulo,
-                   si.Libro.Autor,
-                   si.Libro.Genero.Nombre,
-                   si.Libro.FechaLanzamiento,
-                   si.PrecioPuja,
-                   si.Libro.TipoLibro,
-                   si.Descripcion))
-              .ToListAsync();
+[Route("[action]")]
+[ProducesResponseType(typeof(IList<LibroParaSubastarDTO>), (int)HttpStatusCode.OK)]
+public async Task<ActionResult<IList<LibroParaSubastarDTO>>> GetLibrosParaSubastar(
+    [FromQuery] string? titulo,
+    [FromQuery] string? editorial)
+{
+    var query = _context.Libros.AsQueryable();
 
-       return Ok(libros);
-        }
+    // Flujo Alternativo 1: Filtrar por Título y Editorial
+    if (!string.IsNullOrWhiteSpace(titulo))
+    {
+        query = query.Where(l => l.Titulo.Contains(titulo));
+    }
+
+    if (!string.IsNullOrWhiteSpace(editorial))
+    {
+        query = query.Where(l => l.Editorial.Nombre.Contains(editorial));
+    }
+
+    IList<LibroParaSubastarDTO> libros = await query
+        .OrderBy(l => l.Titulo)
+        .Select(l => new LibroParaSubastarDTO(
+            l.Id,
+            l.Titulo,
+            l.Autor,
+            l.Editorial.Nombre,
+            l.TipoLibro))
+        .ToListAsync();
+
+    return Ok(libros);
+}
     }
 
 }

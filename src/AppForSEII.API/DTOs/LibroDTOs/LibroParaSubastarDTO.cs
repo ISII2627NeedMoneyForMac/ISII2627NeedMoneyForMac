@@ -9,41 +9,32 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         {
         }
 
-        public LibroParaSubastarDTO(int id, string titulo, string autor, string genero, DateTime fechaLanzamiento, int precioPuja, string tipolibro, string? descripcion)
+        public LibroParaSubastarDTO(int id, string titulo, string autor, string editorial, string tipoLibro)
         {
             Id = id;
             Titulo = titulo;
             Autor = autor;
-            Genero = genero;
-            FechaLanzamiento = fechaLanzamiento;
-            PrecioPuja = precioPuja;
-            TipoLibro = tipolibro;
-            Descripcion = descripcion;
+            Editorial = editorial;
+            TipoLibro = tipoLibro;
         }
 
         public int Id { get; set; }
 
+        [Required]
         [StringLength(100, ErrorMessage = "El título debe tener un máximo de 100 caracteres")]
-        public string Titulo { get; set; } = "Título";
-
-        [StringLength(100, ErrorMessage = "El autor debe tener un máximo de 100 caracteres")]
-        public string Autor { get; set; } = "Autor";
-
-        [StringLength(100, ErrorMessage = "El género debe tener un máximo de 100 caracteres")]
-        public string Genero { get; set; } = "Género";
-
-        public DateTime FechaLanzamiento { get; set; }
+        public string Titulo { get; set; } = string.Empty;
 
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "El precio de puja no puede ser negativo")]
-        public int PrecioPuja { get; set; }
+        [StringLength(100, ErrorMessage = "El autor debe tener un máximo de 100 caracteres")]
+        public string Autor { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, ErrorMessage = "La editorial debe tener un máximo de 100 caracteres")]
+        public string Editorial { get; set; } = string.Empty;
 
         [Required]
         [StringLength(100, ErrorMessage = "El tipo de libro debe tener un máximo de 100 caracteres")]
-        public string TipoLibro { get; set; } = "Tipo de Libro";
-
-        [StringLength(500, ErrorMessage = "La descripción debe tener un máximo de 500 caracteres")]
-        public string? Descripcion { get; set; }
+        public string TipoLibro { get; set; } = string.Empty;
 
         public override bool Equals(object? obj)
         {
@@ -51,16 +42,13 @@ namespace AppForSEII.API.DTOs.LibroDTOs
                    Id == dto.Id &&
                    Titulo == dto.Titulo &&
                    Autor == dto.Autor &&
-                   Genero == dto.Genero &&
-                   FechaLanzamiento == dto.FechaLanzamiento &&
-                   PrecioPuja == dto.PrecioPuja &&
-                   TipoLibro == dto.TipoLibro &&
-                   Descripcion == dto.Descripcion;
+                   Editorial == dto.Editorial &&
+                   TipoLibro == dto.TipoLibro;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, Titulo, Autor, Genero, FechaLanzamiento, PrecioPuja, TipoLibro, Descripcion);
+            return HashCode.Combine(Id, Titulo, Autor, Editorial, TipoLibro);
         }
     }
 }
