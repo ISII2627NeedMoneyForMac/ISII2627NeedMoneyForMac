@@ -9,14 +9,14 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         {
         }
 
-        public LibroParaComprarDTO(int id, string titulo, string autor, string genero, DateTime fechaLanzamiento, decimal precioCompra)
+        public LibroParaComprarDTO(int id, string titulo, decimal precioCompra, DateTime fechaLanzamiento, string genero, string editorial)
         {
             Id = id;
             Titulo = titulo;
-            Autor = autor;
-            Genero = genero;
-            FechaLanzamiento = fechaLanzamiento;
             PrecioCompra = precioCompra;
+            FechaLanzamiento = fechaLanzamiento;
+            Genero = genero;
+            Editorial = editorial;
         }
 
         public int Id { get; set; }
@@ -24,32 +24,32 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         [StringLength(100, ErrorMessage = "El título debe tener un máximo de 100 caracteres")]
         public string Titulo { get; set; } = "Título";
 
-        [StringLength(100, ErrorMessage = "El autor debe tener un máximo de 100 caracteres")]
-        public string Autor { get; set; } = "Autor";
+        [Required]
+        [Range(0, double.MaxValue, ErrorMessage = "El precio de compra no puede ser negativo")]
+        public decimal PrecioCompra { get; set; }
+
+        public DateTime FechaLanzamiento { get; set; }
 
         [StringLength(100, ErrorMessage = "El género debe tener un máximo de 100 caracteres")]
         public string Genero { get; set; } = "Género";
 
-        public DateTime FechaLanzamiento { get; set; }
-
-        [Required]
-        [Range(0, double.MaxValue, ErrorMessage = "El precio de compra no puede ser negativo")]
-        public decimal PrecioCompra { get; set; }
+        [StringLength(100, ErrorMessage = "La editorial debe tener un máximo de 100 caracteres")]
+        public string Editorial { get; set; } = "Editorial";
 
         public override bool Equals(object? obj)
         {
             return obj is LibroParaComprarDTO dto &&
                    Id == dto.Id &&
                    Titulo == dto.Titulo &&
-                   Autor == dto.Autor &&
-                   Genero == dto.Genero &&
+                   PrecioCompra == dto.PrecioCompra &&
                    FechaLanzamiento == dto.FechaLanzamiento &&
-                   PrecioCompra == dto.PrecioCompra;
+                   Genero == dto.Genero &&
+                   Editorial == dto.Editorial;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Id, Titulo, Autor, Genero, FechaLanzamiento, PrecioCompra);
+            return HashCode.Combine(Id, Titulo, PrecioCompra, FechaLanzamiento, Genero, Editorial);
         }
     }
 }

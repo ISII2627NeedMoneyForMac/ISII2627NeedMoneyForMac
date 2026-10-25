@@ -41,27 +41,28 @@ namespace AppForSEII.API.Controllers
         }
 
 
-        /// <summary>
-        /// Devuelve los libros que se pueden comprar (con stock disponible),
-        /// opcionalmente filtrados por título y género, ordenados por título.
+               /// <summary>
+        /// Devuelve los libros disponibles para comprar (stock > 0), opcionalmente
+        /// filtrados por género y rango de precio, ordenados por título.
         /// </summary>
         [HttpGet]
         [Route("[action]")]
         [ProducesResponseType(typeof(IList<LibroParaComprarDTO>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetLibrosParaComprar(string? tituloLibro, string? generoLibro)
+        public async Task<ActionResult> GetLibrosParaComprar(string? generoLibro, decimal? precioMin, decimal? precioMax)
         {
             IList<LibroParaComprarDTO> libros = await _context.Libros
                 .Where(l => l.Stock > 0
-                    && (tituloLibro == null || l.Titulo.Contains(tituloLibro))
-                    && (generoLibro == null || l.Genero.Nombre.Equals(generoLibro)))
+                    && (generoLibro == null || l.Genero.Nombre.Equals(generoLibro))
+                    && (precioMin == null || l.PrecioCompra >= precioMin)
+                    && (precioMax == null || l.PrecioCompra <= precioMax))
                 .OrderBy(l => l.Titulo)
                 .Select(l => new LibroParaComprarDTO(
                     l.Id,
                     l.Titulo,
-                    l.Autor,
-                    l.Genero.Nombre,
+                    l.PrecioCompra,
                     l.FechaLanzamiento,
-                    l.PrecioCompra))
+                    l.Genero.Nombre,
+                    l.Editorial.Nombre))
                 .ToListAsync();
 
             return Ok(libros);
