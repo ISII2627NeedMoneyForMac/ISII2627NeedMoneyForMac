@@ -80,7 +80,7 @@ namespace AppForSEII.API.Controllers
             return Ok(reposicion);
         }
 
-        [HttpPost]
+ [HttpPost]
         [Route("[action]")]
         [ProducesResponseType(typeof(ReposicionDetailDTO), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
@@ -90,8 +90,19 @@ namespace AppForSEII.API.Controllers
             // Las validaciones definidas en ReposicionForCreateDTO (datos obligatorios, comentario
             // entre 20 y 100 caracteres, cantidad mayor que 1...) se comprueban antes de ejecutar el método
 
+            // Flujo alternativo 0: si todos los libros tienen stock > 0, no hay nada que reponer
+            if (!_context.Libros.Any(l => l.Stock == 0))
+                ModelState.AddModelError("Libros", "No hay libros disponibles para reponer");
+
+            // Flujo alternativo 2 (respaldo en servidor): no se ha seleccionado ningún libro
             if (reposicionForCreate.ReposicionItems.Count == 0)
                 ModelState.AddModelError("ReposicionItems", "Error! Debes incluir al menos un libro para reponer");
+
+            // Flujo alternativo 4 (respaldo en servidor): falta algún dato obligatorio
+            if (string.IsNullOrWhiteSpace(reposicionForCreate.Nombre) ||
+                string.IsNullOrWhiteSpace(reposicionForCreate.Apellido1) ||
+                string.IsNullOrWhiteSpace(reposicionForCreate.Telefono))
+                ModelState.AddModelError("DatosObligatorios", "Error! Faltan datos obligatorios por rellenar");
 
             var user = _context.ApplicationUsers.FirstOrDefault(au => au.UserName == reposicionForCreate.UserName);
             if (user == null)
@@ -153,7 +164,10 @@ namespace AppForSEII.API.Controllers
             if (ModelState.ErrorCount > 0)
                 return BadRequest(new ValidationProblemDetails(ModelState));
 
-            reposicion.PrecioTotal = reposicionForCreate.TotalPrice;
+            // Flujo alternativo 3: el total se calcula con los items finales del carrito
+            // (así siempre coincide con los libros que quedan tras eliminar alguno)
+            reposicion.PrecioTotal = reposicionForCreate.ReposicionItems
+                .Sum(i => i.PrecioReposicion * i.CantidadReposicion);
 
             // datos que el usuario introduce en la reposición
             user!.Name = reposicionForCreate.Nombre;
