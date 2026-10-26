@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AppForSEII.API.Migrations
 {
     /// <inheritdoc />
-    public partial class MigracionOficial : Migration
+    public partial class CreateIdentitySchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,6 +32,7 @@ namespace AppForSEII.API.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Surname = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Direccion = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -79,41 +80,20 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "GooglePays",
-                columns: table => new
-                {
-                    Email = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_GooglePays", x => x.Email);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "MetodoPagos",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Discriminator = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    NumeroTelefono = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumeroTelefono = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NumeroTarjeta = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FechaCaducidad = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MetodoPagos", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Visas",
-                columns: table => new
-                {
-                    NumeroTarjeta = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    FechaCaducidad = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Visas", x => x.NumeroTarjeta);
                 });
 
             migrationBuilder.CreateTable(
@@ -223,29 +203,6 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Compras",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FechaCompra = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PrecioTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    MetodoPagoId = table.Column<int>(type: "int", nullable: false),
-                    CodigoDescuento = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Compras", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Compras_AspNetUsers_UsuarioId",
-                        column: x => x.UsuarioId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Reposiciones",
                 columns: table => new
                 {
@@ -321,24 +278,29 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CompraMetodoPago",
+                name: "Compras",
                 columns: table => new
                 {
-                    ComprasId = table.Column<int>(type: "int", nullable: false),
-                    MetodosPagoId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaCompra = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PrecioTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    MetodoPagoId = table.Column<int>(type: "int", nullable: false),
+                    CodigoDescuento = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CompraMetodoPago", x => new { x.ComprasId, x.MetodosPagoId });
+                    table.PrimaryKey("PK_Compras", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CompraMetodoPago_Compras_ComprasId",
-                        column: x => x.ComprasId,
-                        principalTable: "Compras",
+                        name: "FK_Compras_AspNetUsers_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CompraMetodoPago_MetodoPagos_MetodosPagoId",
-                        column: x => x.MetodosPagoId,
+                        name: "FK_Compras_MetodoPagos_MetodoPagoId",
+                        column: x => x.MetodoPagoId,
                         principalTable: "MetodoPagos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -388,31 +350,6 @@ namespace AppForSEII.API.Migrations
                         name: "FK_MetodoPagoSubasta_Subastas_SubastasId",
                         column: x => x.SubastasId,
                         principalTable: "Subastas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CompraItems",
-                columns: table => new
-                {
-                    LibroId = table.Column<int>(type: "int", nullable: false),
-                    CompraId = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompraItems", x => new { x.CompraId, x.LibroId });
-                    table.ForeignKey(
-                        name: "FK_CompraItems_Compras_CompraId",
-                        column: x => x.CompraId,
-                        principalTable: "Compras",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CompraItems_Libros_LibroId",
-                        column: x => x.LibroId,
-                        principalTable: "Libros",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -468,6 +405,31 @@ namespace AppForSEII.API.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CompraItems",
+                columns: table => new
+                {
+                    LibroId = table.Column<int>(type: "int", nullable: false),
+                    CompraId = table.Column<int>(type: "int", nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompraItems", x => new { x.CompraId, x.LibroId });
+                    table.ForeignKey(
+                        name: "FK_CompraItems_Compras_CompraId",
+                        column: x => x.CompraId,
+                        principalTable: "Compras",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompraItems_Libros_LibroId",
+                        column: x => x.LibroId,
+                        principalTable: "Libros",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -513,9 +475,9 @@ namespace AppForSEII.API.Migrations
                 column: "LibroId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CompraMetodoPago_MetodosPagoId",
-                table: "CompraMetodoPago",
-                column: "MetodosPagoId");
+                name: "IX_Compras_MetodoPagoId",
+                table: "Compras",
+                column: "MetodoPagoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Compras_UsuarioId",
@@ -585,12 +547,6 @@ namespace AppForSEII.API.Migrations
                 name: "CompraItems");
 
             migrationBuilder.DropTable(
-                name: "CompraMetodoPago");
-
-            migrationBuilder.DropTable(
-                name: "GooglePays");
-
-            migrationBuilder.DropTable(
                 name: "MetodoPagoReposicion");
 
             migrationBuilder.DropTable(
@@ -603,16 +559,10 @@ namespace AppForSEII.API.Migrations
                 name: "SubastaItems");
 
             migrationBuilder.DropTable(
-                name: "Visas");
-
-            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Compras");
-
-            migrationBuilder.DropTable(
-                name: "MetodoPagos");
 
             migrationBuilder.DropTable(
                 name: "Reposiciones");
@@ -622,6 +572,9 @@ namespace AppForSEII.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "Subastas");
+
+            migrationBuilder.DropTable(
+                name: "MetodoPagos");
 
             migrationBuilder.DropTable(
                 name: "Editoriales");

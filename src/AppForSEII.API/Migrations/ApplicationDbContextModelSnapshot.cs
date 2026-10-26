@@ -34,6 +34,10 @@ namespace AppForSEII.API.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Direccion")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -122,6 +126,8 @@ namespace AppForSEII.API.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("MetodoPagoId");
+
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("Compras");
@@ -177,19 +183,6 @@ namespace AppForSEII.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Generos");
-                });
-
-            modelBuilder.Entity("AppForSEII.API.Models.GooglePay", b =>
-                {
-                    b.Property<int>("Email")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Email"));
-
-                    b.HasKey("Email");
-
-                    b.ToTable("GooglePays");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Libro", b =>
@@ -351,34 +344,6 @@ namespace AppForSEII.API.Migrations
                     b.HasIndex("LibroId");
 
                     b.ToTable("SubastaItems");
-                });
-
-            modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>
-                {
-                    b.Property<string>("NumeroTarjeta")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("FechaCaducidad")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("NumeroTarjeta");
-
-                    b.ToTable("Visas");
-                });
-
-            modelBuilder.Entity("CompraMetodoPago", b =>
-                {
-                    b.Property<int>("ComprasId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MetodosPagoId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ComprasId", "MetodosPagoId");
-
-                    b.HasIndex("MetodosPagoId");
-
-                    b.ToTable("CompraMetodoPago");
                 });
 
             modelBuilder.Entity("MetodoPagoReposicion", b =>
@@ -544,6 +509,17 @@ namespace AppForSEII.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.GooglePay", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("GooglePay");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.PayPal", b =>
                 {
                     b.HasBaseType("AppForSEII.API.Models.MetodoPago");
@@ -555,13 +531,35 @@ namespace AppForSEII.API.Migrations
                     b.HasDiscriminator().HasValue("PayPal");
                 });
 
+            modelBuilder.Entity("AppForSEII.API.Models.Visa", b =>
+                {
+                    b.HasBaseType("AppForSEII.API.Models.MetodoPago");
+
+                    b.Property<DateTime>("FechaCaducidad")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NumeroTarjeta")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasDiscriminator().HasValue("Visa");
+                });
+
             modelBuilder.Entity("AppForSEII.API.Models.Compra", b =>
                 {
+                    b.HasOne("AppForSEII.API.Models.MetodoPago", "MetodoPago")
+                        .WithMany("Compras")
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("MetodoPago");
 
                     b.Navigation("Usuario");
                 });
@@ -660,21 +658,6 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("Libro");
 
                     b.Navigation("Subasta");
-                });
-
-            modelBuilder.Entity("CompraMetodoPago", b =>
-                {
-                    b.HasOne("AppForSEII.API.Models.Compra", null)
-                        .WithMany()
-                        .HasForeignKey("ComprasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppForSEII.API.Models.MetodoPago", null)
-                        .WithMany()
-                        .HasForeignKey("MetodosPagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("MetodoPagoReposicion", b =>
@@ -778,6 +761,11 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("CompraItems");
 
                     b.Navigation("ReposicionItems");
+                });
+
+            modelBuilder.Entity("AppForSEII.API.Models.MetodoPago", b =>
+                {
+                    b.Navigation("Compras");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
