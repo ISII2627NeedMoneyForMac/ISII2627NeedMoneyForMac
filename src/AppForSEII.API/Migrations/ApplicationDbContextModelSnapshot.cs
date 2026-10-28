@@ -316,14 +316,13 @@ namespace AppForSEII.API.Migrations
                     b.Property<DateTime>("FechaSubasta")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("MetodoPagoId")
+                    b.Property<int?>("MetodoPagoId")
                         .HasColumnType("int");
 
                     b.Property<double>("PrecioSubasta")
                         .HasColumnType("float");
 
                     b.Property<string>("UsuarioId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -622,15 +621,11 @@ namespace AppForSEII.API.Migrations
                 {
                     b.HasOne("AppForSEII.API.Models.MetodoPago", "MetodoPago")
                         .WithMany("Subastas")
-                        .HasForeignKey("MetodoPagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("MetodoPagoId");
 
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
                         .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UsuarioId");
 
                     b.Navigation("MetodoPago");
 
