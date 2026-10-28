@@ -29,7 +29,7 @@ namespace AppForSEII.API.Models
 
         //Relaciones
         public IList<SubastaItem> SubastaItems { get; set; } 
-        public List<MetodoPago> MetodosPago { get; set; } 
+        public MetodoPago MetodoPago { get; set; }
         public ApplicationUser Usuario { get; set; }
 
     }

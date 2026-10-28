@@ -37,8 +37,8 @@ namespace AppForSEII.API.Controllers
                     Nombre = r.Usuario!.Name,
                     Apellidos = r.Usuario!.Surname,
                     Telefono = r.Usuario!.PhoneNumber,
-                    EsVisa = r.MetodosPago!.Any(m => m is Visa),
-                    EsGooglePay = r.MetodosPago!.Any(m => m is GooglePay),
+                    EsVisa = r.MetodoPago is Visa,
+                    EsGooglePay = r.MetodoPago is GooglePay,
                     Items = r.ReposicionItems!
                         .Select(ri => new ReposicionItemDTO(
                             ri.LibroId,
@@ -130,7 +130,7 @@ namespace AppForSEII.API.Controllers
                 FechaReposicion = DateTime.Now,
                 Comentario = reposicionForCreate.Comentario,
                 Usuario = user,
-                MetodosPago = new List<MetodoPago> { metodoPago },
+                MetodoPago = metodoPago,
                 ReposicionItems = new List<ReposicionItem>()
             };
 
