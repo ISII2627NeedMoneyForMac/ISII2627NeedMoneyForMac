@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using AppForSEII.API.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppForSEII.API.Data {
     public class SeedData {
@@ -36,6 +37,15 @@ namespace AppForSEII.API.Data {
             }
             catch (Exception ex) {
                 logger.LogError(ex, "An error occurred seeding the Libros in the Database.");
+            }
+
+            try {
+                SeedMetodosPago(dbContext);
+                SeedOperaciones(dbContext);
+            }
+            catch (Exception ex) {
+                logger.LogError(ex, "An error occurred seeding the payments and operations in the Database.");
+                throw;
             }
 
         }
@@ -307,6 +317,14 @@ namespace AppForSEII.API.Data {
 
             dbcontext.Libros.AddRange(nuevos);
             dbcontext.SaveChanges();
+
+            // Única modificación de los libros existentes: dejar sin stock estos cinco títulos.
+            var titulosSinStock = new[] { "Dune", "El hobbit", "Frankenstein", "Clean Code", "Matilda" };
+            var librosSinStock = dbcontext.Libros
+                .Where(l => titulosSinStock.Contains(l.Titulo) && l.Stock != 0)
+                .ToList();
+            foreach (var libro in librosSinStock) libro.Stock = 0;
+            dbcontext.SaveChanges();
         }
 
         private static Libro CrearLibro(Random rnd, string titulo, string autor, int anio, Genero genero, Editorial editorial) {
@@ -326,5 +344,154 @@ namespace AppForSEII.API.Data {
             return libro;
         }
 
+        private const int EjemplosPorTabla = 10;
+
+        public static void SeedMetodosPago(ApplicationDbContext dbcontext) {
+            var tarjetas = new HashSet<string>(dbcontext.Visas.Select(v => v.NumeroTarjeta));
+            int numVisas = dbcontext.Visas.Count();
+            for (int i = 1; numVisas < EjemplosPorTabla; i++) {
+                string numero = GenerarNumeroVisa(i);
+                if (!tarjetas.Add(numero)) continue;
+                dbcontext.Visas.Add(new Visa(numero, new DateTime(2029 + i % 3, (i - 1) % 12 + 1, 28)));
+                numVisas++;
+            }
+
+            var emails = new HashSet<string>(dbcontext.GooglePays.Select(g => g.Email));
+            int numGooglePays = dbcontext.GooglePays.Count();
+            for (int i = 1; numGooglePays < EjemplosPorTabla; i++) {
+                string email = $"googlepay.prueba{i:000}@example.com";
+                if (!emails.Add(email)) continue;
+                dbcontext.GooglePays.Add(new GooglePay(email));
+                numGooglePays++;
+            }
+
+            var telefonos = new HashSet<string>(dbcontext.PayPals.Select(p => p.NumeroTelefono));
+            int numPayPals = dbcontext.PayPals.Count();
+            for (int i = 1; numPayPals < EjemplosPorTabla; i++) {
+                string telefono = $"60080{i:0000}";
+                if (!telefonos.Add(telefono)) continue;
+                dbcontext.PayPals.Add(new PayPal(telefono));
+                numPayPals++;
+            }
+
+            dbcontext.SaveChanges();
+        }
+
+        private static string GenerarNumeroVisa(int indice) {
+            string base15 = "40000000000" + indice.ToString("D4");
+            int suma = 0;
+            bool duplicar = true;
+            for (int i = base15.Length - 1; i >= 0; i--) {
+                int digito = base15[i] - '0';
+                if (duplicar) {
+                    digito *= 2;
+                    if (digito > 9) digito -= 9;
+                }
+                suma += digito;
+                duplicar = !duplicar;
+            }
+            return base15 + ((10 - suma % 10) % 10).ToString();
+        }
+
+        public static void SeedOperaciones(ApplicationDbContext dbcontext) {
+            var clientes = dbcontext.ApplicationUsers
+                .Where(u => u.Id == "3" || u.Id.StartsWith("C"))
+                .OrderBy(u => u.Id).ToList();
+            var empleados = dbcontext.ApplicationUsers
+                .Where(u => u.Id == "2" || u.Id.StartsWith("E"))
+                .OrderBy(u => u.Id).ToList();
+            var metodosPago = dbcontext.MetodoPagos.OrderBy(m => m.Id).ToList();
+            var libros = dbcontext.Libros.Where(l => l.Stock > 0).OrderBy(l => l.Id).ToList();
+
+            if (clientes.Count == 0 || empleados.Count == 0 || metodosPago.Count == 0 || libros.Count == 0)
+                throw new InvalidOperationException("Faltan clientes, empleados, métodos de pago o libros con stock para generar los ejemplos.");
+
+            SeedCompras(dbcontext, clientes, metodosPago, libros);
+            SeedReposiciones(dbcontext, empleados, metodosPago, libros);
+            SeedSubastas(dbcontext, clientes, metodosPago, libros);
+        }
+
+        private static void SeedCompras(ApplicationDbContext dbcontext, List<ApplicationUser> clientes,
+            List<MetodoPago> metodosPago, List<Libro> libros) {
+            int faltan = Math.Max(0, Math.Max(EjemplosPorTabla - dbcontext.Compras.Count(),
+                                               EjemplosPorTabla - dbcontext.CompraItems.Count()));
+            int inicio = dbcontext.Compras.Count();
+
+            for (int i = 0; i < faltan; i++) {
+                int indice = inicio + i;
+                var libro = libros[indice % libros.Count];
+                int cantidad = Math.Min(1 + indice % 3, libro.Stock);
+
+                var compra = new Compra(
+                    new DateTime(2026, 9, 1).AddDays(indice),
+                    libro.PrecioCompra * cantidad,
+                    clientes[indice % clientes.Count].Id,
+                    metodosPago[indice % metodosPago.Count].Id,
+                    indice % 3 == 0 ? $"TEST{indice % 100:00}" : null
+                ) {
+                    CompraItems = new List<CompraItem> {
+                        new CompraItem { Libro = libro, Cantidad = cantidad }
+                    }
+                };
+                dbcontext.Compras.Add(compra);
+            }
+
+            dbcontext.SaveChanges();
+        }
+
+        private static void SeedReposiciones(ApplicationDbContext dbcontext, List<ApplicationUser> empleados,
+            List<MetodoPago> metodosPago, List<Libro> libros) {
+            int faltan = Math.Max(0, Math.Max(EjemplosPorTabla - dbcontext.Reposiciones.Count(),
+                                               EjemplosPorTabla - dbcontext.ReposicionItems.Count()));
+            int inicio = dbcontext.Reposiciones.Count();
+
+            for (int i = 0; i < faltan; i++) {
+                int indice = inicio + i;
+                var libro = libros[(indice + 12) % libros.Count];
+                int cantidad = 5 + indice % 8;
+
+                var reposicion = new Reposicion {
+                    FechaReposicion = new DateTime(2026, 8, 1).AddDays(indice),
+                    PrecioTotal = libro.PrecioReposicion * cantidad,
+                    Comentario = $"Reposición de prueba {indice + 1:00}",
+                    Usuario = empleados[indice % empleados.Count],
+                    MetodoPago = metodosPago[indice % metodosPago.Count],
+                    ReposicionItems = new List<ReposicionItem> {
+                        new ReposicionItem { Libro = libro, CantidadReposicion = cantidad }
+                    }
+                };
+                dbcontext.Reposiciones.Add(reposicion);
+            }
+
+            dbcontext.SaveChanges();
+        }
+
+        private static void SeedSubastas(ApplicationDbContext dbcontext, List<ApplicationUser> clientes,
+            List<MetodoPago> metodosPago, List<Libro> libros) {
+            int faltan = Math.Max(0, Math.Max(EjemplosPorTabla - dbcontext.Subastas.Count(),
+                                               EjemplosPorTabla - dbcontext.SubastaItems.Count()));
+            int inicio = dbcontext.Subastas.Count();
+
+            for (int i = 0; i < faltan; i++) {
+                int indice = inicio + i;
+                var libro = libros[(indice + 30) % libros.Count];
+                double precioSalida = Math.Round((double)libro.PrecioCompra * 1.1, 2);
+                int puja = (int)Math.Ceiling(precioSalida) + 5 + indice % 10;
+
+                var subasta = new Subasta {
+                    FechaSubasta = new DateTime(2026, 7, 1).AddDays(indice),
+                    PrecioSubasta = precioSalida,
+                    Usuario = clientes[indice % clientes.Count],
+                    MetodoPago = metodosPago[(indice + 1) % metodosPago.Count],
+                    SubastaItems = new List<SubastaItem> {
+                        new SubastaItem { Libro = libro, PrecioPuja = puja, Descripcion = $"Puja de prueba {indice + 1:00}" }
+                    }
+                };
+                dbcontext.Subastas.Add(subasta);
+            }
+
+            dbcontext.SaveChanges();
+        }
     }
+
 }
