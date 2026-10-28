@@ -203,48 +203,6 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reposiciones",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PrecioTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Comentario = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reposiciones", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Reposiciones_AspNetUsers_UsuarioId",
-                        column: x => x.UsuarioId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Subastas",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FechaSubasta = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PrecioSubasta = table.Column<double>(type: "float", nullable: false),
-                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subastas", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Subastas_AspNetUsers_UsuarioId",
-                        column: x => x.UsuarioId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Libros",
                 columns: table => new
                 {
@@ -307,49 +265,82 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MetodoPagoReposicion",
+                name: "Reposiciones",
                 columns: table => new
                 {
-                    MetodosPagoId = table.Column<int>(type: "int", nullable: false),
-                    ReposicionesId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaReposicion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PrecioTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Comentario = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    MetodoPagoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MetodoPagoReposicion", x => new { x.MetodosPagoId, x.ReposicionesId });
+                    table.PrimaryKey("PK_Reposiciones", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MetodoPagoReposicion_MetodoPagos_MetodosPagoId",
-                        column: x => x.MetodosPagoId,
+                        name: "FK_Reposiciones_AspNetUsers_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Reposiciones_MetodoPagos_MetodoPagoId",
+                        column: x => x.MetodoPagoId,
                         principalTable: "MetodoPagos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_MetodoPagoReposicion_Reposiciones_ReposicionesId",
-                        column: x => x.ReposicionesId,
-                        principalTable: "Reposiciones",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "MetodoPagoSubasta",
+                name: "Subastas",
                 columns: table => new
                 {
-                    MetodosPagoId = table.Column<int>(type: "int", nullable: false),
-                    SubastasId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaSubasta = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PrecioSubasta = table.Column<double>(type: "float", nullable: false),
+                    MetodoPagoId = table.Column<int>(type: "int", nullable: false),
+                    UsuarioId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MetodoPagoSubasta", x => new { x.MetodosPagoId, x.SubastasId });
+                    table.PrimaryKey("PK_Subastas", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MetodoPagoSubasta_MetodoPagos_MetodosPagoId",
-                        column: x => x.MetodosPagoId,
-                        principalTable: "MetodoPagos",
+                        name: "FK_Subastas_AspNetUsers_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_MetodoPagoSubasta_Subastas_SubastasId",
-                        column: x => x.SubastasId,
-                        principalTable: "Subastas",
+                        name: "FK_Subastas_MetodoPagos_MetodoPagoId",
+                        column: x => x.MetodoPagoId,
+                        principalTable: "MetodoPagos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CompraItems",
+                columns: table => new
+                {
+                    LibroId = table.Column<int>(type: "int", nullable: false),
+                    CompraId = table.Column<int>(type: "int", nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CompraItems", x => new { x.CompraId, x.LibroId });
+                    table.ForeignKey(
+                        name: "FK_CompraItems_Compras_CompraId",
+                        column: x => x.CompraId,
+                        principalTable: "Compras",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CompraItems_Libros_LibroId",
+                        column: x => x.LibroId,
+                        principalTable: "Libros",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -401,31 +392,6 @@ namespace AppForSEII.API.Migrations
                         name: "FK_SubastaItems_Subastas_SubastaId",
                         column: x => x.SubastaId,
                         principalTable: "Subastas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CompraItems",
-                columns: table => new
-                {
-                    LibroId = table.Column<int>(type: "int", nullable: false),
-                    CompraId = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompraItems", x => new { x.CompraId, x.LibroId });
-                    table.ForeignKey(
-                        name: "FK_CompraItems_Compras_CompraId",
-                        column: x => x.CompraId,
-                        principalTable: "Compras",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CompraItems_Libros_LibroId",
-                        column: x => x.LibroId,
-                        principalTable: "Libros",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -495,14 +461,9 @@ namespace AppForSEII.API.Migrations
                 column: "GeneroId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MetodoPagoReposicion_ReposicionesId",
-                table: "MetodoPagoReposicion",
-                column: "ReposicionesId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MetodoPagoSubasta_SubastasId",
-                table: "MetodoPagoSubasta",
-                column: "SubastasId");
+                name: "IX_Reposiciones_MetodoPagoId",
+                table: "Reposiciones",
+                column: "MetodoPagoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reposiciones_UsuarioId",
@@ -518,6 +479,11 @@ namespace AppForSEII.API.Migrations
                 name: "IX_SubastaItems_LibroId",
                 table: "SubastaItems",
                 column: "LibroId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Subastas_MetodoPagoId",
+                table: "Subastas",
+                column: "MetodoPagoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Subastas_UsuarioId",
@@ -547,12 +513,6 @@ namespace AppForSEII.API.Migrations
                 name: "CompraItems");
 
             migrationBuilder.DropTable(
-                name: "MetodoPagoReposicion");
-
-            migrationBuilder.DropTable(
-                name: "MetodoPagoSubasta");
-
-            migrationBuilder.DropTable(
                 name: "ReposicionItems");
 
             migrationBuilder.DropTable(
@@ -574,9 +534,6 @@ namespace AppForSEII.API.Migrations
                 name: "Subastas");
 
             migrationBuilder.DropTable(
-                name: "MetodoPagos");
-
-            migrationBuilder.DropTable(
                 name: "Editoriales");
 
             migrationBuilder.DropTable(
@@ -584,6 +541,9 @@ namespace AppForSEII.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "MetodoPagos");
         }
     }
 }

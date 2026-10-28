@@ -30,7 +30,7 @@ namespace AppForSEII.API.Models
 
         public ApplicationUser? Usuario { get; set; }
 
-        public List<MetodoPago>? MetodosPago { get; set; }
+        public MetodoPago MetodoPago { get; set; }
 
         public IList<ReposicionItem>? ReposicionItems { get; set; }
     }

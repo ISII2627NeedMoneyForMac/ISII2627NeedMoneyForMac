@@ -269,6 +269,9 @@ namespace AppForSEII.API.Migrations
                     b.Property<DateTime>("FechaReposicion")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("MetodoPagoId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("PrecioTotal")
                         .HasColumnType("decimal(18,2)");
 
@@ -276,6 +279,8 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MetodoPagoId");
 
                     b.HasIndex("UsuarioId");
 
@@ -311,6 +316,9 @@ namespace AppForSEII.API.Migrations
                     b.Property<DateTime>("FechaSubasta")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("MetodoPagoId")
+                        .HasColumnType("int");
+
                     b.Property<double>("PrecioSubasta")
                         .HasColumnType("float");
 
@@ -319,6 +327,8 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MetodoPagoId");
 
                     b.HasIndex("UsuarioId");
 
@@ -344,36 +354,6 @@ namespace AppForSEII.API.Migrations
                     b.HasIndex("LibroId");
 
                     b.ToTable("SubastaItems");
-                });
-
-            modelBuilder.Entity("MetodoPagoReposicion", b =>
-                {
-                    b.Property<int>("MetodosPagoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReposicionesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MetodosPagoId", "ReposicionesId");
-
-                    b.HasIndex("ReposicionesId");
-
-                    b.ToTable("MetodoPagoReposicion");
-                });
-
-            modelBuilder.Entity("MetodoPagoSubasta", b =>
-                {
-                    b.Property<int>("MetodosPagoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubastasId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MetodosPagoId", "SubastasId");
-
-                    b.HasIndex("SubastasId");
-
-                    b.ToTable("MetodoPagoSubasta");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -604,9 +584,17 @@ namespace AppForSEII.API.Migrations
 
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>
                 {
+                    b.HasOne("AppForSEII.API.Models.MetodoPago", "MetodoPago")
+                        .WithMany("Reposiciones")
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId");
+
+                    b.Navigation("MetodoPago");
 
                     b.Navigation("Usuario");
                 });
@@ -632,11 +620,19 @@ namespace AppForSEII.API.Migrations
 
             modelBuilder.Entity("AppForSEII.API.Models.Subasta", b =>
                 {
+                    b.HasOne("AppForSEII.API.Models.MetodoPago", "MetodoPago")
+                        .WithMany("Subastas")
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AppForSEII.API.Models.ApplicationUser", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("MetodoPago");
 
                     b.Navigation("Usuario");
                 });
@@ -658,36 +654,6 @@ namespace AppForSEII.API.Migrations
                     b.Navigation("Libro");
 
                     b.Navigation("Subasta");
-                });
-
-            modelBuilder.Entity("MetodoPagoReposicion", b =>
-                {
-                    b.HasOne("AppForSEII.API.Models.MetodoPago", null)
-                        .WithMany()
-                        .HasForeignKey("MetodosPagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppForSEII.API.Models.Reposicion", null)
-                        .WithMany()
-                        .HasForeignKey("ReposicionesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("MetodoPagoSubasta", b =>
-                {
-                    b.HasOne("AppForSEII.API.Models.MetodoPago", null)
-                        .WithMany()
-                        .HasForeignKey("MetodosPagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppForSEII.API.Models.Subasta", null)
-                        .WithMany()
-                        .HasForeignKey("SubastasId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -766,6 +732,10 @@ namespace AppForSEII.API.Migrations
             modelBuilder.Entity("AppForSEII.API.Models.MetodoPago", b =>
                 {
                     b.Navigation("Compras");
+
+                    b.Navigation("Reposiciones");
+
+                    b.Navigation("Subastas");
                 });
 
             modelBuilder.Entity("AppForSEII.API.Models.Reposicion", b =>

@@ -126,15 +126,12 @@ namespace AppForSEII.API.Controllers
                 FechaSubasta = DateTime.Now,
                 PrecioSubasta = (double)subastaForCreate.TotalPrice,
                 Usuario = user!,
-                MetodosPago = new List<MetodoPago>
-                {
-                    subastaForCreate.MetodoPago switch
-                    {
-                        MetodoPagoTipos.Visa => new Visa(),
-                        MetodoPagoTipos.GooglePay => new GooglePay(),
-                        _ => new PayPal()
-                    }
-                },
+            MetodoPago = subastaForCreate.MetodoPago switch
+            {
+                     MetodoPagoTipos.Visa => new Visa(),
+                     MetodoPagoTipos.GooglePay => new GooglePay(),
+                    _ => new PayPal()
+                    },
                 SubastaItems = new List<SubastaItem>()
             };
 
