@@ -8,15 +8,15 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
     public class SubastaForCreateDTO
     {
         public SubastaForCreateDTO(string userName, string nombre, string apellidos, string telefono,
-            MetodoPagoTipos metodoPago, string? descripcion, IList<SubastaItemDTO> subastaItems)
+            MetodoPagoSubastaTipos metodoPago, string? descripcion, IList<SubastaItemDTO> subastaItems)
         {
-            UserName = userName ?? throw new ArgumentNullException(nameof(userName));
-            Nombre = nombre ?? throw new ArgumentNullException(nameof(nombre));
-            Apellidos = apellidos ?? throw new ArgumentNullException(nameof(apellidos));
-            Telefono = telefono ?? throw new ArgumentNullException(nameof(telefono));
+            UsuarioUserName = userName;
+            Nombre = nombre ;
+            Apellidos = apellidos;
+            Telefono = telefono ;
             MetodoPago = metodoPago;
             Descripcion = descripcion;
-            SubastaItems = subastaItems ?? throw new ArgumentNullException(nameof(subastaItems));
+            SubastaItems = subastaItems;
         }
 
         public SubastaForCreateDTO()
@@ -24,28 +24,26 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
             SubastaItems = new List<SubastaItemDTO>();
         }
 
-        [EmailAddress]
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Por favor, indica el nombre de usuario")]
-        public string UserName { get; set; } = "usuario@uclm.es";
-
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Por favor, indica tu nombre")]
-        [StringLength(50, ErrorMessage = "El nombre debe tener un máximo de 50 caracteres")]
-        public string Nombre { get; set; } = "Nombre";
-
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Por favor, indica tus apellidos")]
-        [StringLength(100, ErrorMessage = "Los apellidos deben tener un máximo de 100 caracteres")]
-        public string Apellidos { get; set; } = "Apellidos";
-
-        [Phone]
-        [Required(AllowEmptyStrings = false, ErrorMessage = "Por favor, indica tu teléfono")]
-        [StringLength(20, ErrorMessage = "El teléfono debe tener un máximo de 20 caracteres")]
-        public string Telefono { get; set; } = "600000000";
+        [Required]
+        public string UsuarioUserName { get; set; } = string.Empty;
 
         [Required]
-        public MetodoPagoTipos MetodoPago { get; set; } = MetodoPagoTipos.Visa;
+        [StringLength(50)]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string Apellidos { get; set; } = string.Empty;
+
+         [Required]
+        [Phone]
+        public string Telefono { get; set; } = string.Empty;
+
+        [Required]
+        public MetodoPagoSubastaTipos MetodoPago { get; set; } = MetodoPagoSubastaTipos.Visa;
 
         // Opcional: entre 20 y 100 caracteres según la especificación del Caso de Uso 3
-        [DataType(System.ComponentModel.DataAnnotations.DataType.MultilineText)]
+        [DataType(System.ComponentModel.DataAnnotations.DataType.MultilineText)]    
         [StringLength(100, MinimumLength = 20, ErrorMessage = "La descripción debe tener entre 20 y 100 caracteres")]
         public string? Descripcion { get; set; }
 
@@ -62,7 +60,7 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
         public override bool Equals(object? obj)
         {
             return obj is SubastaForCreateDTO dto &&
-                   UserName == dto.UserName &&
+                   UsuarioUserName == dto.UsuarioUserName &&
                    Nombre == dto.Nombre &&
                    Apellidos == dto.Apellidos &&
                    Telefono == dto.Telefono &&
@@ -74,11 +72,11 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(UserName, Nombre, Apellidos, Telefono, MetodoPago, Descripcion);
+            return HashCode.Combine(UsuarioUserName, Nombre, Apellidos, Telefono, MetodoPago, Descripcion);
         }
     }
 
-    public enum MetodoPagoTipos
+    public enum MetodoPagoSubastaTipos
     {
         Visa,
         GooglePay,
