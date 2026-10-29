@@ -1,5 +1,4 @@
 using System.Net;
-using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.SubastaDTOs;
 using AppForSEII.API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -24,46 +23,38 @@ namespace AppForSEII.API.Controllers
         [Route("[action]")]
         [ProducesResponseType(typeof(SubastaDetailDTO), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> GetDetailsForSubastas(int id, CancellationToken cancellationToken)
+        public async Task<ActionResult> GetSubasta(int id)
         {
-            var datos = await _context.Subastas
-                .Where(s => s.Id == id)
-                .Select(s => new
-                {
-                    s.Id,
-                    s.FechaSubasta,
-                    Nombre = s.Usuario!.Name,
-                    Apellidos = s.Usuario!.Surname,
-                    Telefono = s.Usuario!.PhoneNumber,
-                    Descripcion = s.SubastaItems!
-                        .Select(si => si.Descripcion)
-                        .FirstOrDefault(),
-                    Items = s.SubastaItems!
-                        .Select(si => new SubastaItemDTO(
-                            si.LibroId,
-                            si.Libro.Titulo,
-                            si.Libro.Autor,
-                            si.PrecioPuja))
-                        .ToList()
-                })
-                .FirstOrDefaultAsync(cancellationToken);
+            var subasta = await _context.Subastas
+                .AsNoTracking()
+                .Include(s => s.Usuario)
+                .Include(s => s.MetodoPago)
+                .Include(s => s.SubastaItems)
+                    .ThenInclude(si => si.Libro)
+                        .ThenInclude(l => l.Editorial)
+                .FirstOrDefaultAsync(s => s.Id == id);
 
-            if (datos == null)
+            if (subasta == null)
             {
-                _logger.LogError("Error: Subasta with id {SubastaId} does not exist", id);
+                _logger.LogError($"Error: Subasta with id {id} does not exist");
                 return NotFound();
             }
 
-            var subasta = new SubastaDetailDTO(
-                datos.Id,
-                datos.Nombre ?? "",
-                datos.Apellidos ?? "",
-                datos.Telefono ?? "",
-                datos.FechaSubasta,
-                datos.Descripcion,
-                datos.Items);
+            var items = subasta.SubastaItems
+                .Select(si => new SubastaItemDTO(si.Libro.Id, si.Libro.Titulo,
+                    si.Libro.Editorial.Nombre, si.Libro.Autor, si.PrecioPuja))
+                .ToList();
 
-            return Ok(subasta);
+            var detail = new SubastaDetailDTO(subasta.Id,
+                subasta.Usuario?.Name ?? string.Empty,
+                subasta.Usuario?.Surname ?? string.Empty,
+                subasta.Usuario?.PhoneNumber ?? string.Empty,
+                ObtenerTipoMetodoPago(subasta.MetodoPago),
+                subasta.FechaSubasta,
+                subasta.SubastaItems.Select(si => si.Descripcion).FirstOrDefault(),
+                items);
+
+            return Ok(detail);
         }
 
         [HttpPost]
@@ -71,69 +62,48 @@ namespace AppForSEII.API.Controllers
         [ProducesResponseType(typeof(SubastaDetailDTO), (int)HttpStatusCode.Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(string), (int)HttpStatusCode.Conflict)]
-        public async Task<ActionResult> CreateSubasta(
-            SubastaForCreateDTO subastaForCreate,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult> CreateSubasta(SubastaForCreateDTO subastaForCreate)
         {
+            // Los DataAnnotations (campos obligatorios, descripción 20-100, puja > 0) ya se validan antes de entrar
+
+            // Flujo alternativo 4: debe haber al menos un libro en la lista de pujas
             if (subastaForCreate.SubastaItems.Count == 0)
+                ModelState.AddModelError("SubastaItems", "Error! Debes incluir al menos un libro en la subasta");
+
+            if (subastaForCreate.SubastaItems.Select(si => si.LibroId).Distinct().Count()
+                != subastaForCreate.SubastaItems.Count)
+                ModelState.AddModelError("SubastaItems", "Error! Hay libros repetidos en la subasta");
+
+            // PrecioPuja es int en la entidad: no se admiten decimales
+            foreach (var item in subastaForCreate.SubastaItems)
             {
-                ModelState.AddModelError(
-                    nameof(subastaForCreate.SubastaItems),
-                    "Error! Debes incluir al menos un libro para subastar");
+                if (item.PrecioPuja != Math.Floor(item.PrecioPuja))
+                    ModelState.AddModelError("SubastaItems",
+                        $"Error! El precio de la puja del libro '{item.LibroId}' debe ser un número entero");
             }
 
             var user = await _context.ApplicationUsers
-                .FirstOrDefaultAsync(au => au.UserName == subastaForCreate.UserName, cancellationToken);
-
+                .FirstOrDefaultAsync(au => au.UserName == subastaForCreate.UsuarioUserName);
             if (user == null)
-            {
-                ModelState.AddModelError(
-                    "SubastaApplicationUser",
-                    "Error! El nombre de usuario no está registrado");
-            }
-
-            if (subastaForCreate.SubastaItems
-                .GroupBy(item => item.LibroId)
-                .Any(group => group.Count() > 1))
-            {
-                ModelState.AddModelError(
-                    nameof(subastaForCreate.SubastaItems),
-                    "Error! No se puede incluir el mismo libro más de una vez");
-            }
-
-            if (subastaForCreate.SubastaItems.Any(item => item.PrecioPuja % 1 != 0))
-            {
-                ModelState.AddModelError(
-                    nameof(subastaForCreate.SubastaItems),
-                    "Error! El precio de la puja debe ser un número entero");
-            }
+                ModelState.AddModelError("SubastaApplicationUser", "Error! UserName is not registered");
 
             if (ModelState.ErrorCount > 0)
-            {
                 return BadRequest(new ValidationProblemDetails(ModelState));
-            }
 
-            var libroIds = subastaForCreate.SubastaItems
-                .Select(item => item.LibroId)
-                .ToList();
-
+            var libroIds = subastaForCreate.SubastaItems.Select(si => si.LibroId).ToList();
             var libros = await _context.Libros
-                .Where(libro => libroIds.Contains(libro.Id))
-                .ToListAsync(cancellationToken);
+                .Include(l => l.Editorial)
+                .Where(l => libroIds.Contains(l.Id))
+                .ToListAsync();
 
             var subasta = new Subasta
             {
                 FechaSubasta = DateTime.Now,
-                PrecioSubasta = (double)subastaForCreate.TotalPrice,
-                Usuario = user!,
-            MetodoPago = subastaForCreate.MetodoPago switch
-            {
-                     MetodoPagoTipos.Visa => new Visa(),
-                     MetodoPagoTipos.GooglePay => new GooglePay(),
-                    _ => new PayPal()
-                    },
-                SubastaItems = new List<SubastaItem>()
+                Usuario = user,
+                MetodoPago = CrearMetodoPago(subastaForCreate.MetodoPago)
             };
+
+            var itemsDetail = new List<SubastaItemDTO>();
 
             foreach (var item in subastaForCreate.SubastaItems)
             {
@@ -141,58 +111,73 @@ namespace AppForSEII.API.Controllers
 
                 if (libro == null)
                 {
-                    ModelState.AddModelError(
-                        nameof(subastaForCreate.SubastaItems),
-                        $"Error! El libro con id {item.LibroId} no existe");
-                    continue;
+                    ModelState.AddModelError("SubastaItems", $"Error! El libro con id '{item.LibroId}' no existe");
                 }
-
-                subasta.SubastaItems.Add(new SubastaItem
+                else if (libro.Stock <= 0)
                 {
-                    LibroId = libro.Id,
-                    Subasta = subasta,
-                    PrecioPuja = (int)item.PrecioPuja,
-                    Descripcion = subastaForCreate.Descripcion
-                });
+                    // Flujo alternativo 0: solo se subastan libros con stock > 0
+                    ModelState.AddModelError("SubastaItems", $"Error! El libro '{libro.Titulo}' no está disponible para subasta");
+                }
+                else
+                {
+                    subasta.SubastaItems.Add(new SubastaItem
+                    {
+                        Libro = libro,
+                        Subasta = subasta,
+                        PrecioPuja = (int)item.PrecioPuja,
+                        Descripcion = subastaForCreate.Descripcion
+                    });
 
-                item.Titulo = libro.Titulo;
-                item.Autor = libro.Autor;
+                    // Se usan los datos de la BD, no los enviados por el cliente
+                    itemsDetail.Add(new SubastaItemDTO(libro.Id, libro.Titulo,
+                        libro.Editorial.Nombre, libro.Autor, (int)item.PrecioPuja));
+                }
             }
 
             if (ModelState.ErrorCount > 0)
-            {
                 return BadRequest(new ValidationProblemDetails(ModelState));
-            }
 
-            user!.Name = subastaForCreate.Nombre;
-            user.Surname = subastaForCreate.Apellidos;
-            user.PhoneNumber = subastaForCreate.Telefono;
+            subasta.PrecioSubasta = subasta.SubastaItems.Sum(si => si.PrecioPuja);
 
-            _context.Subastas.Add(subasta);
+            _context.Add(subasta);
 
             try
             {
-                await _context.SaveChangesAsync(cancellationToken);
+                // Se guardan la subasta y sus items
+                await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving subasta for user {UserName}", subastaForCreate.UserName);
-                return Conflict("Error! Ha ocurrido un error al guardar la subasta, inténtalo de nuevo más tarde");
+                _logger.LogError(ex.Message);
+                return Conflict("Error! There was an error while saving your subasta, please try again later: "
+                    + ex.Message);
             }
 
-            var subastaDetail = new SubastaDetailDTO(
-                subasta.Id,
-                subastaForCreate.Nombre,
-                subastaForCreate.Apellidos,
-                subastaForCreate.Telefono,
-                subasta.FechaSubasta,
-                subastaForCreate.Descripcion,
-                subastaForCreate.SubastaItems);
+            var subastaDetail = new SubastaDetailDTO(subasta.Id,
+                user!.Name ?? string.Empty,
+                user.Surname ?? string.Empty,
+                user.PhoneNumber ?? string.Empty,
+                subastaForCreate.MetodoPago, subasta.FechaSubasta,
+                subastaForCreate.Descripcion, itemsDetail);
 
-            return CreatedAtAction(
-                nameof(GetDetailsForSubastas),
-                new { id = subasta.Id },
-                subastaDetail);
+            return CreatedAtAction("GetSubasta", new { id = subasta.Id }, subastaDetail);
         }
+
+        // enum del DTO -> clase de la entidad
+        private static MetodoPago CrearMetodoPago(MetodoPagoSubastaTipos tipo) => tipo switch
+        {
+            MetodoPagoSubastaTipos.Visa => new Visa(),
+            MetodoPagoSubastaTipos.GooglePay => new GooglePay(),
+            MetodoPagoSubastaTipos.PayPal => new PayPal(),
+            _ => throw new ArgumentOutOfRangeException(nameof(tipo))
+        };
+
+        // clase de la entidad -> enum del DTO
+        private static MetodoPagoSubastaTipos ObtenerTipoMetodoPago(MetodoPago? metodoPago) => metodoPago switch
+        {
+            GooglePay => MetodoPagoSubastaTipos.GooglePay,
+            PayPal => MetodoPagoSubastaTipos.PayPal,
+            _ => MetodoPagoSubastaTipos.Visa
+        };
     }
 }
