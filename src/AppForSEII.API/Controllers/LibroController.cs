@@ -19,26 +19,31 @@ namespace AppForSEII.API.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Devuelve los ítems de reposición, con el libro al que corresponde cada uno
-        /// y la cantidad que hay que reponer.
-        /// </summary>
-        [HttpGet]
-        [Route("[action]")]
-        [ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetLibrosParaReponer()
-        {
-          IList<LibroParaReponerDTO> libros = await _context.ReposicionItems
-                .OrderByDescending(ri => ri.CantidadReposicion)
-                .Select(ri => new LibroParaReponerDTO(
-                    ri.LibroId,
-                    ri.Libro.Titulo,
-                    ri.Libro.Autor,
-                    ri.CantidadReposicion))
-            .ToListAsync();
+/// <summary>
+/// Devuelve los libros sin stock (Stock == 0) para reponer, opcionalmente
+/// filtrados por autor y género, ordenados por título.
+/// </summary>
+[HttpGet]
+[Route("[action]")]
+[ProducesResponseType(typeof(IList<LibroParaReponerDTO>), (int)HttpStatusCode.OK)]
+public async Task<ActionResult> GetLibrosParaReponer(string? autor, string? generoLibro)
+{
+    IList<LibroParaReponerDTO> libros = await _context.Libros
+        .Where(l => l.Stock == 0
+            && (string.IsNullOrEmpty(autor) || l.Autor.Equals(autor))
+            && (string.IsNullOrEmpty(generoLibro) || l.Genero.Nombre.Equals(generoLibro)))
+        .OrderBy(l => l.Titulo)
+        .Select(l => new LibroParaReponerDTO(
+            l.Id,
+            l.Titulo,
+            l.Genero.Nombre,
+            l.FechaLanzamiento,
+            l.PrecioCompra, // O la propiedad correspondiente al precio de reposición en tu entidad Libro
+            l.Autor))
+        .ToListAsync();
 
-        return Ok(libros);
-        }
+    return Ok(libros);
+}
 
 
                /// <summary>
