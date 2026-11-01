@@ -23,7 +23,7 @@ namespace AppForSEII.API.Controllers
         [Route("[action]")]
         [ProducesResponseType(typeof(SubastaDetailDTO), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> GetSubasta(int id)
+        public async Task<ActionResult> GetDetailsForSubastas(int id)
         {
             var subasta = await _context.Subastas
                 .AsNoTracking()
