@@ -28,7 +28,7 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
         public string Autor { get; set; } = "Autor";
 
     
-        [Range(0.01, double.MaxValue, ErrorMessage = "El precio de la puja debe ser mayor que 0")]
+        [Range(1d, int.MaxValue, ErrorMessage = "El precio de la puja debe ser un número entero entre 1 y 2147483647")]
         public double PrecioPuja { get; set; }
 
         public override bool Equals(object? obj)

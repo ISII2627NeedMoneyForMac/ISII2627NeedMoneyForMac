@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace AppForSEII.API.DTOs.SubastaDTOs
 {
@@ -49,6 +50,8 @@ namespace AppForSEII.API.DTOs.SubastaDTOs
 
         public IList<SubastaItemDTO> SubastaItems { get; set; } = new List<SubastaItemDTO>();
 
+        [ValidateNever]
+        [JsonIgnore]
         public decimal TotalPrice
         {
             get
