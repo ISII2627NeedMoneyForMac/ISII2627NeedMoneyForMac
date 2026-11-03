@@ -38,7 +38,7 @@ public async Task<ActionResult> GetLibrosParaReponer(string? autor, string? gene
             l.Titulo,
             l.Genero.Nombre,
             l.FechaLanzamiento,
-            l.PrecioCompra, // O la propiedad correspondiente al precio de reposición en tu entidad Libro
+           l.PrecioReposicion, // O la propiedad correspondiente al precio de reposición en tu entidad Libro
             l.Autor))
         .ToListAsync();
 
