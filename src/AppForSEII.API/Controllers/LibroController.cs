@@ -78,24 +78,24 @@ public async Task<ActionResult> GetLibrosParaReponer(string? autor, string? gene
         /// y la descripción de cada ítem, ordenados por título.
         /// </summary>
         [HttpGet]
-[Route("[action]")]
-[ProducesResponseType(typeof(IList<LibroParaSubastarDTO>), (int)HttpStatusCode.OK)]
-public async Task<ActionResult<IList<LibroParaSubastarDTO>>> GetLibrosParaSubastar(
-    [FromQuery] string? titulo,
-    [FromQuery] string? editorial)
-{
-    var query = _context.Libros.AsQueryable();
+        [Route("[action]")]
+        [ProducesResponseType(typeof(IList<LibroParaSubastarDTO>), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<IList<LibroParaSubastarDTO>>> GetLibrosParaSubastar(
+            [FromQuery] string? titulo,
+            [FromQuery] string? editorial)
+        {
+            var query = _context.Libros.Where(l => l.Stock > 0);
 
-    // Flujo Alternativo 1: Filtrar por Título y Editorial
-    if (!string.IsNullOrWhiteSpace(titulo))
-    {
-        query = query.Where(l => l.Titulo.Contains(titulo));
-    }
+        // Flujo Alternativo 1: Filtrar por Título y Editorial
+        if (!string.IsNullOrWhiteSpace(titulo))
+        {
+            query = query.Where(l => l.Titulo.Contains(titulo));
+        }
 
-    if (!string.IsNullOrWhiteSpace(editorial))
-    {
-        query = query.Where(l => l.Editorial.Nombre.Contains(editorial));
-    }
+        if (!string.IsNullOrWhiteSpace(editorial))
+        {
+            query = query.Where(l => l.Editorial.Nombre.Contains(editorial));
+        }
 
     IList<LibroParaSubastarDTO> libros = await query
         .OrderBy(l => l.Titulo)

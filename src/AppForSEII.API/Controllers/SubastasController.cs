@@ -74,13 +74,16 @@ namespace AppForSEII.API.Controllers
                 != subastaForCreate.SubastaItems.Count)
                 ModelState.AddModelError("SubastaItems", "Error! Hay libros repetidos en la subasta");
 
-            // PrecioPuja es int en la entidad: no se admiten decimales
+            // PrecioPuja es int en la entidad: solo enteros entre 1 e int.MaxValue
             foreach (var item in subastaForCreate.SubastaItems)
-            {
-                if (item.PrecioPuja != Math.Floor(item.PrecioPuja))
-                    ModelState.AddModelError("SubastaItems",
-                        $"Error! El precio de la puja del libro '{item.LibroId}' debe ser un número entero");
-            }
+{
+    if (item.PrecioPuja < 1 || item.PrecioPuja > int.MaxValue)
+        ModelState.AddModelError("SubastaItems",
+            $"Error! El precio de la puja del libro '{item.LibroId}' debe estar entre 1 y {int.MaxValue}");
+    else if (item.PrecioPuja != Math.Floor(item.PrecioPuja))
+        ModelState.AddModelError("SubastaItems",
+            $"Error! El precio de la puja del libro '{item.LibroId}' debe ser un número entero");
+}
 
             var user = await _context.ApplicationUsers
                 .FirstOrDefaultAsync(au => au.UserName == subastaForCreate.UsuarioUserName);
@@ -139,6 +142,10 @@ namespace AppForSEII.API.Controllers
 
             subasta.PrecioSubasta = subasta.SubastaItems.Sum(si => si.PrecioPuja);
 
+            // los datos del formulario (paso 5) se guardan en el usuario, igual que en Compras
+            user!.Name = subastaForCreate.Nombre;
+            user.Surname = subastaForCreate.Apellidos;
+            user.PhoneNumber = subastaForCreate.Telefono;
             _context.Add(subasta);
 
             try
@@ -160,7 +167,7 @@ namespace AppForSEII.API.Controllers
                 subastaForCreate.MetodoPago, subasta.FechaSubasta,
                 subastaForCreate.Descripcion, itemsDetail);
 
-            return CreatedAtAction("GetSubasta", new { id = subasta.Id }, subastaDetail);
+            return CreatedAtAction(nameof (GetDetailsForSubastas), new { id = subasta.Id }, subastaDetail);
         }
 
         // enum del DTO -> clase de la entidad
