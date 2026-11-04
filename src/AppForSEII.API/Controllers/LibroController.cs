@@ -53,8 +53,17 @@ public async Task<ActionResult> GetLibrosParaReponer(string? autor, string? gene
         [HttpGet]
         [Route("[action]")]
         [ProducesResponseType(typeof(IList<LibroParaComprarDTO>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> GetLibrosParaComprar(string? generoLibro, decimal? precioMin, decimal? precioMax)
         {
+          if (precioMin != null && precioMax != null && precioMin > precioMax)
+            {
+                ModelState.AddModelError("precioMin&precioMax", "precioMin debe ser menor o igual que precioMax");
+                _logger.LogError($"{DateTime.Now} Error: precioMin debe ser menor o igual que precioMax");
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+
             IList<LibroParaComprarDTO> libros = await _context.Libros
                 .Where(l => l.Stock > 0
                     && (generoLibro == null || l.Genero.Nombre.Equals(generoLibro))
