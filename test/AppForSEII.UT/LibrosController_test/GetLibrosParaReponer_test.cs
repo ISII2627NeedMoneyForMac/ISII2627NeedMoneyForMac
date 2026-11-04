@@ -3,9 +3,9 @@ using AppForSEII.API.DTOs.LibroDTOs;
 
 namespace AppForSEII.UT.LibrosController_test
 {
-    public class GetLibros_test : AppForSEII4SqliteUT
+    public class GetLibrosParaReponer_test : AppForSEII4SqliteUT
     {
-        public GetLibros_test()
+        public GetLibrosParaReponer_test()
         {
             var generos = new List<Genero>() {
                 new Genero(1, "Ciencia ficción"),
