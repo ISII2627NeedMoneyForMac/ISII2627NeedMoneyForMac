@@ -161,9 +161,9 @@ namespace AppForSEII.API.Controllers
             }
 
             var subastaDetail = new SubastaDetailDTO(subasta.Id,
-                user!.Name ?? string.Empty,
-                user.Surname ?? string.Empty,
-                user.PhoneNumber ?? string.Empty,
+                subastaForCreate.Nombre,
+                subastaForCreate.Apellidos,
+                subastaForCreate.Telefono,
                 subastaForCreate.MetodoPago, subasta.FechaSubasta,
                 subastaForCreate.Descripcion, itemsDetail);
 

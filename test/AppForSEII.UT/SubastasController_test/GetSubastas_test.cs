@@ -59,6 +59,15 @@ namespace AppForSEII.UT.SubastasController_test
             subasta3.SubastaItems.Add(new SubastaItem
             { Libro = libros[1], Subasta = subasta3, PrecioPuja = 25, Descripcion = _descripcion });
 
+            //subasta 4: sin usuario y sin items (cubre los ?? string.Empty y el FirstOrDefault nulo)
+            var subasta4 = new Subasta
+            {
+                FechaSubasta = _fecha,
+                PrecioSubasta = 0,
+                Usuario = null,
+                MetodoPago = new Visa("4111111111111111", DateTime.Today.AddYears(2))
+            };
+
             _context.ApplicationUsers.Add(user);
             _context.Add(genero);
             _context.Add(editorial);
@@ -66,6 +75,7 @@ namespace AppForSEII.UT.SubastasController_test
             _context.Add(subasta1);
             _context.Add(subasta2);
             _context.Add(subasta3);
+            _context.Add(subasta4);
             _context.SaveChanges();
         }
 
@@ -163,6 +173,30 @@ namespace AppForSEII.UT.SubastasController_test
             var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
             Assert.Null(subastaDTOActual.Descripcion);
             Assert.Equal(15m, subastaDTOActual.TotalPrice);
+        }
+
+        [Fact]
+        [Trait("Database", "WithoutFixture")]
+        [Trait("LevelTesting", "Unit Testing")]
+        public async Task GetSubasta_SinUsuariNiTiems_test()
+        {
+            //Arrange
+            var mock = new Mock<ILogger<SubastasController>>();
+            ILogger<SubastasController> logger = mock.Object;
+            var controller = new SubastasController(_context, logger);
+
+            //Act
+            // la subasta 4 se ha creado sin usuario y sin items
+            var result = await controller.GetDetailsForSubastas(4);
+            //Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
+            Assert.Equal(string.Empty, subastaDTOActual.Nombre);
+            Assert.Equal(string.Empty, subastaDTOActual.Apellidos);
+            Assert.Equal(string.Empty, subastaDTOActual.Telefono);
+            Assert.Null(subastaDTOActual.Descripcion);
+            Assert.Empty(subastaDTOActual.SubastaItems);
+            Assert.Equal(0m, subastaDTOActual.TotalPrice);
         }
     }
 }
