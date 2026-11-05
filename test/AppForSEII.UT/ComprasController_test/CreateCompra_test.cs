@@ -27,14 +27,18 @@ namespace AppForSEII.UT.ComprasController_test
 
             ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es");
 
-            //el método de pago tendrá id = 1
+            //métodos de pago: GooglePay tendrá id = 1, Visa id = 2 y PayPal id = 3 (el orden de inserción importa)
             var metodoPago = new GooglePay("peter@uclm.es");
+            var metodoVisa = new Visa("4111111111111111", new DateTime(2030, 1, 1));
+            var metodoPayPal = new PayPal("612345678");
 
             _context.ApplicationUsers.Add(user);
             _context.AddRange(generos);
             _context.Add(editorial);
             _context.AddRange(libros);
             _context.Add(metodoPago);
+            _context.Add(metodoVisa);
+            _context.Add(metodoPayPal);
             _context.SaveChanges();
         }
 
@@ -51,7 +55,7 @@ namespace AppForSEII.UT.ComprasController_test
             return new CompraItemDTO { LibroId = libroId, Cantidad = cantidad };
         }
 
-              public static IEnumerable<object[]> TestCasesFor_CreateCompra()
+        public static IEnumerable<object[]> TestCasesFor_CreateCompra()
         {
             var compraSinLibros = NuevaCompra("peter@uclm.es", 1, new List<CompraItemDTO>());
 
@@ -88,7 +92,7 @@ namespace AppForSEII.UT.ComprasController_test
         }
 
 
-                [Theory]
+        [Theory]
         [Trait("LevelTesting", "Unit Testing")]
         [Trait("Database", "WithoutFixture")]
         [MemberData(nameof(TestCasesFor_CreateCompra))]
@@ -118,7 +122,7 @@ namespace AppForSEII.UT.ComprasController_test
         }
 
 
-                [Fact]
+        [Fact]
         [Trait("LevelTesting", "Unit Testing")]
         [Trait("Database", "WithoutFixture")]
         public async Task CreateCompra_Success_test()
@@ -169,6 +173,41 @@ namespace AppForSEII.UT.ComprasController_test
             Assert.Equal(19, contextoNuevo.Libros.Single(l => l.Id == 2).Stock);
             Assert.Equal("Calle Mayor 1, Albacete",
                 contextoNuevo.ApplicationUsers.Single(u => u.UserName == "peter@uclm.es").Direccion);
+        }
+
+        // Cubre las tres ramas del ternario del método de pago al crear la compra
+        [Theory]
+        [InlineData("GooglePay")]
+        [InlineData("Visa")]
+        [InlineData("PayPal")]
+        [Trait("LevelTesting", "Unit Testing")]
+        [Trait("Database", "WithoutFixture")]
+        public async Task CreateCompra_MetodoPago_test(string metodoPagoEsperado)
+        {
+            // Arrange
+            //obtenemos el id real del método de pago según su tipo (no dependemos del orden de inserción)
+            int metodoPagoId = metodoPagoEsperado switch
+            {
+                "Visa" => _context.MetodoPagos.OfType<Visa>().Single().Id,
+                "PayPal" => _context.MetodoPagos.OfType<PayPal>().Single().Id,
+                _ => _context.MetodoPagos.OfType<GooglePay>().Single().Id
+            };
+
+            var mock = new Mock<ILogger<ComprasController>>();
+            ILogger<ComprasController> logger = mock.Object;
+
+            var controller = new ComprasController(_context, logger);
+
+            var compraDTO = NuevaCompra("peter@uclm.es", metodoPagoId,
+                new List<CompraItemDTO> { Item(1, 1) });
+
+            // Act
+            var result = await controller.CreateCompra(compraDTO);
+
+            // Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
+            var actual = Assert.IsType<ComprasDetailDTO>(createdResult.Value);
+            Assert.Equal(metodoPagoEsperado, actual.MetodoPago);
         }
     }
 }
