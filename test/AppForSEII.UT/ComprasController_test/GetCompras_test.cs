@@ -26,7 +26,10 @@ namespace AppForSEII.UT.ComprasController_test
             user.Direccion = "Avda. España s/n, Albacete 02071";
             user.PhoneNumber = "600123456";
 
+            //métodos de pago: GooglePay -> compra 1, Visa -> compra 2, PayPal -> compra 3
             var metodoPago = new GooglePay("elena@uclm.es");
+            var metodoVisa = new Visa("4111111111111111", new DateTime(2030, 1, 1));
+            var metodoPayPal = new PayPal("600123456");
 
             var compra = new Compra {
                 FechaCompra = new DateTime(2026, 10, 15, 12, 0, 0),
@@ -38,12 +41,37 @@ namespace AppForSEII.UT.ComprasController_test
             };
             compra.CompraItems.Add(new CompraItem { Libro = libros[0], Compra = compra, Cantidad = 2 });
 
+            var compraVisa = new Compra {
+                FechaCompra = new DateTime(2026, 10, 16, 12, 0, 0),
+                PrecioTotal = 9.95m,
+                Usuario = user,
+                MetodoPago = metodoVisa,
+                CodigoDescuento = null,
+                CompraItems = new List<CompraItem>()
+            };
+            compraVisa.CompraItems.Add(new CompraItem { Libro = libros[0], Compra = compraVisa, Cantidad = 1 });
+
+            var compraPayPal = new Compra {
+                FechaCompra = new DateTime(2026, 10, 17, 12, 0, 0),
+                PrecioTotal = 15.95m,
+                Usuario = user,
+                MetodoPago = metodoPayPal,
+                CodigoDescuento = null,
+                CompraItems = new List<CompraItem>()
+            };
+            compraPayPal.CompraItems.Add(new CompraItem { Libro = libros[1], Compra = compraPayPal, Cantidad = 1 });
+
             _context.ApplicationUsers.Add(user);
             _context.AddRange(generos);
             _context.Add(editorial);
             _context.AddRange(libros);
             _context.Add(metodoPago);
+            _context.Add(metodoVisa);
+            _context.Add(metodoPayPal);
+            //el orden de inserción determina los ids: 1, 2 y 3
             _context.Add(compra);
+            _context.Add(compraVisa);
+            _context.Add(compraPayPal);
             _context.SaveChanges();
         }
 
@@ -92,6 +120,29 @@ namespace AppForSEII.UT.ComprasController_test
             var compraDTOActual = Assert.IsType<ComprasDetailDTO>(okResult.Value);
             //comprobamos que la esperada y la actual son iguales
             Assert.Equal(expectedCompra, compraDTOActual);
+        }
+
+        // Cubre las tres ramas del ternario del método de pago al consultar el detalle
+        [Theory]
+        [InlineData(1, "GooglePay")]
+        [InlineData(2, "Visa")]
+        [InlineData(3, "PayPal")]
+        [Trait("LevelTesting", "Unit Testing")]
+        [Trait("Database", "WithoutFixture")]
+        public async Task GetDetailsForCompras_MetodoPago_test(int compraId, string metodoPagoEsperado)
+        {
+            // Arrange
+            var mock = new Mock<ILogger<ComprasController>>();
+            ILogger<ComprasController> logger = mock.Object;
+            var controller = new ComprasController(_context, logger);
+
+            // Act
+            var result = await controller.GetDetailsForCompras(compraId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var dto = Assert.IsType<ComprasDetailDTO>(okResult.Value);
+            Assert.Equal(metodoPagoEsperado, dto.MetodoPago);
         }
     }
 }
