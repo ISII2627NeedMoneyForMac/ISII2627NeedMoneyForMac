@@ -5,12 +5,12 @@ namespace AppForSEII.UT.ReposicionesController_test
 {
     public class CreateReposiciones_test : AppForSEII4SqliteUT
     {
-	private const string _userName = "laura@uclm.es";
-	private const string _nombre = "Laura";
-	private const string _apellido1 = "Sánchez";
-	private const string _apellido2 = "Ruiz";
-	private const string _telefono = "600123456";
-	private const string _comentario = "Reposición de libros agotados";
+        private const string _userName = "laura@uclm.es";
+        private const string _nombre = "Laura";
+        private const string _apellido1 = "Sánchez";
+        private const string _apellido2 = "Ruiz";
+        private const string _telefono = "600123456";
+        private const string _comentario = "Reposición de libros agotados";
 
         private const string _libro1Titulo = "El señor de los anillos";
         private const string _libro1Autor = "Tolkien";
@@ -164,6 +164,40 @@ namespace AppForSEII.UT.ReposicionesController_test
             // la reposición se ha guardado y el stock del libro ha aumentado con la cantidad repuesta
             Assert.Equal(1, _context.Reposiciones.Count());
             Assert.Equal(5, _context.Libros.First(l => l.Id == 1).Stock);
+        }
+
+        // NUEVO: cubre las ramas GooglePay y PayPal del switch de metodoPago
+        [Theory]
+        [InlineData(MetodoPagoTipos.GooglePay, typeof(GooglePay))]
+        [InlineData(MetodoPagoTipos.PayPal, typeof(PayPal))]
+        [Trait("LevelTesting", "Unit Testing")]
+        [Trait("Database", "WithoutFixture")]
+        public async Task CreateReposicion_MetodoPago_test(MetodoPagoTipos tipo, Type tipoEsperado)
+        {
+            // Arrange
+            var mock = new Mock<ILogger<ReposicionesController>>();
+            ILogger<ReposicionesController> logger = mock.Object;
+
+            var controller = new ReposicionesController(_context, logger);
+
+            var reposicionDTO = new ReposicionForCreateDTO(_userName, _nombre, _apellido1, _apellido2,
+                _telefono, tipo, _comentario,
+                new List<ReposicionItemDTO>()
+                { new ReposicionItemDTO(1, _libro1Titulo, _libro1Autor, 10.0m, 5) });
+
+            // Act
+            var result = await controller.CreateReposicion(reposicionDTO);
+
+            //Assert
+            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
+            var detail = Assert.IsType<ReposicionDetailDTO>(createdResult.Value);
+
+            // el DTO devuelto lleva el tipo de pago elegido
+            Assert.Equal(tipo, detail.MetodoPago);
+
+            // y en la base de datos se ha guardado la clase concreta correspondiente
+            var guardada = _context.Reposiciones.Single();
+            Assert.IsType(tipoEsperado, guardada.MetodoPago);
         }
 
     }
