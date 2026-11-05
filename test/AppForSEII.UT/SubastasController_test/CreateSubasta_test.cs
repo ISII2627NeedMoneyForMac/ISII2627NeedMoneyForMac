@@ -281,5 +281,26 @@ namespace AppForSEII.UT.SubastasController_test
                 case MetodoPagoSubastaTipos.PayPal: Assert.IsType<PayPal>(metodoPagoGuardado); break;
             }
         }
+
+        [Fact]
+        [Trait("LevelTesting", "Unit Testing")]
+        [Trait("Database", "WithoutFixture")]
+        public async Task CreateSubasta_MetodoPagoInvalido_Throws_test()
+        {
+            // Arrange
+            var mock = new Mock<ILogger<SubastasController>>();
+            ILogger<SubastasController> logger = mock.Object;
+            var controller = new SubastasController(_context, logger);
+
+            //un valor que no existe en el enum: CrearMetodoPago lanza la excepción
+            var subastaDTO = NuevaSubasta("peter@uclm.es", new List<SubastaItemDTO> { Item(1, 10) },
+                null, (MetodoPagoSubastaTipos)99);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => controller.CreateSubasta(subastaDTO));
+
+            //no se ha guardado ninguna subasta
+            Assert.Empty(_context.Subastas);
+        }
     }
 }
