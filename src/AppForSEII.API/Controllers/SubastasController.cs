@@ -8,6 +8,7 @@ using AppForSEII.API.Models;
 using Microsoft.AspNetCore.Mvc;
 // Entity Framework: Include, AsNoTracking, FirstOrDefaultAsync, ToListAsync...
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AppForSEII.API.Controllers
 {
@@ -126,6 +127,12 @@ namespace AppForSEII.API.Controllers
                 // ...es que hay algún libro repetido: añadimos el error
                 ModelState.AddModelError("SubastaItems", "Error! Hay libros repetidos en la subasta");
 
+            
+            if (subastaForCreate.Nombre.Equals("Paco") || subastaForCreate.Nombre.Equals("Pepe"))
+            {
+                ModelState.AddModelError("Nombre", "¡Error!, los Pacos y los Pepes no pueden pujar");
+            }
+
             // PrecioPuja es int en la entidad: solo enteros entre 1 e int.MaxValue
             // Recorremos cada item para validar su precio de puja
             foreach (var item in subastaForCreate.SubastaItems)
@@ -220,6 +227,8 @@ namespace AppForSEII.API.Controllers
                         libro.Editorial.Nombre, libro.Autor, (int)item.PrecioPuja));
                 }
             }
+            
+            
 
             // Si en el bucle anterior se añadieron errores (libro inexistente o sin stock)...
             if (ModelState.ErrorCount > 0)
