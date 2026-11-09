@@ -19,7 +19,7 @@ namespace AppForSEII.UT.ReposicionesController_test
         // Segundo apellido
         private const string _apellido2 = "Ruiz";
         // Teléfono
-        private const string _telefono = "600123456";
+        private const string _telefono = "+600123456";
         // Comentario de la reposición
         private const string _comentario = "Reposición de libros agotados";
 
@@ -67,6 +67,22 @@ namespace AppForSEII.UT.ReposicionesController_test
             // Guarda todo en la base de datos de prueba
             _context.SaveChanges();
         }
+        // ReposicionForCreateDTO(userName, nombre, apellido1, apellido2, telefono, metodoPago, comentario, items)
+// Crea un DTO de creación válido; solo hay que indicar lo que cambia en cada test
+private static ReposicionForCreateDTO NuevaReposicion(string usuarioUserName, List<ReposicionItemDTO> items,
+    string nombre = _nombre, string telefono = _telefono,
+    string? comentario = _comentario, MetodoPagoTipos metodoPago = MetodoPagoTipos.Visa)
+{
+    // Los apellidos son fijos en todos los tests
+    return new ReposicionForCreateDTO(usuarioUserName, nombre, _apellido1, _apellido2,
+        telefono, metodoPago, comentario, items);
+}
+
+// Solo se usan LibroId y CantidadReposicion: título, autor y precio los toma el controlador de la BD
+private static ReposicionItemDTO Item(int libroId, int cantidad)
+{
+    return new ReposicionItemDTO(libroId, "", "", 0m, cantidad);
+}
 
         // Método que proporciona los casos de prueba (datos de entrada + error esperado) al test con [MemberData]
         public static IEnumerable<object[]> TestCasesFor_CreateReposicion()
@@ -108,6 +124,7 @@ namespace AppForSEII.UT.ReposicionesController_test
                 new object[] { reposicionUsuarioNoRegistrado, "Error! El nombre de usuario no está registrado", },
                 // Caso 4: libro inexistente -> error indicando el id
                 new object[] { reposicionLibroInexistente, "Error! El libro con id 99 no existe", },
+                // Caso 5: teléfono incorrecto -> error de formato
             };
 
             // Devuelve los casos para que xUnit ejecute el test una vez por cada uno
@@ -206,49 +223,70 @@ namespace AppForSEII.UT.ReposicionesController_test
         // Etiqueta: sin fixture de BD
         [Trait("Database", "WithoutFixture")]
         // Test del caso correcto: la reposición se crea bien
-        public async Task CreateReposicion_Success_test()
-        {
-            // Arrange
-            // Crea el logger falso
-            var mock = new Mock<ILogger<ReposicionesController>>();
-            // Obtiene el objeto logger
-            ILogger<ReposicionesController> logger = mock.Object;
+public async Task CreateReposicion_Success_test()
+{
+    // Arrange
+    var mock = new Mock<ILogger<ReposicionesController>>();
+    ILogger<ReposicionesController> logger = mock.Object;
+    var controller = new ReposicionesController(_context, logger);
 
-            // Crea el controlador
-            var controller = new ReposicionesController(_context, logger);
+    // Nombre distinto al del usuario guardado ("Laura"): así comprobamos que el controlador lo actualiza
+    const string nombreNuevo = "Pedro";
 
-            // DTO válido: repone 5 unidades del libro 1 pagando con Visa
-            var reposicionDTO = new ReposicionForCreateDTO(_userName, _nombre, _apellido1, _apellido2,
-                _telefono, MetodoPagoTipos.Visa, _comentario,
-                new List<ReposicionItemDTO>()
-                { new ReposicionItemDTO(1, _libro1Titulo, _libro1Autor, 10.0m, 5) });
+    // Reposición válida: 5 unidades del libro 1 (que tiene stock 0)
+    var reposicionDTO = NuevaReposicion(_userName,
+        new List<ReposicionItemDTO> { Item(1, 5) }, nombre: nombreNuevo);
 
-            // Recibo que se espera recibir (Id 1 porque es la primera reposición de la BD)
-            var expectedReposicionDetailDTO = new ReposicionDetailDTO(1, DateTime.Now,
-                _userName, _nombre, _apellido1, _apellido2, _telefono, MetodoPagoTipos.Visa, _comentario,
-                new List<ReposicionItemDTO>()
-                { new ReposicionItemDTO(1, _libro1Titulo, _libro1Autor, 10.0m, 5) });
+    // Act
+    // Rango de tiempo en el que debe estar la fecha de la reposición
+    var antes = DateTime.Now;
+    var result = await controller.CreateReposicion(reposicionDTO);
+    var despues = DateTime.Now;
 
-            // Act
-            // Ejecuta el método a probar
-            var result = await controller.CreateReposicion(reposicionDTO);
+    // Assert
+    //comprobamos que la respuesta es 201 y apunta al details de la reposición creada
+    var createdResult = Assert.IsType<CreatedAtActionResult>(result);
+    Assert.Equal("GetDetailsForReposiciones", createdResult.ActionName);
+    Assert.Equal(1, createdResult.RouteValues!["id"]);
+    var actualReposicionDetailDTO = Assert.IsType<ReposicionDetailDTO>(createdResult.Value);
 
-            //Assert
-            //comprobamos que la respuesta es Created y obtenemos el detalle devuelto
-            // Verifica que devuelve 201 Created
-            var createdResult = Assert.IsType<CreatedAtActionResult>(result);
-            // Verifica que el cuerpo es un ReposicionDetailDTO
-            var actualReposicionDetailDTO = Assert.IsType<ReposicionDetailDTO>(createdResult.Value);
+    //la fecha la pone el controlador (DateTime.Now): comprobamos que es de ahora
+    Assert.InRange(actualReposicionDetailDTO.FechaReposicion, antes, despues);
 
-            // Compara el recibo esperado con el recibido
-            Assert.Equal(expectedReposicionDetailDTO, actualReposicionDetailDTO);
+    // Construimos el DTO esperado (la fecha se copia del actual porque no se puede predecir exacta)
+    var expectedReposicionDetailDTO = new ReposicionDetailDTO(1, actualReposicionDetailDTO.FechaReposicion,
+        _userName, nombreNuevo, _apellido1, _apellido2, _telefono, MetodoPagoTipos.Visa, _comentario,
+        new List<ReposicionItemDTO>()
+        { new ReposicionItemDTO(1, _libro1Titulo, _libro1Autor, 10.0m, 5) });
 
-            // la reposición se ha guardado y el stock del libro ha aumentado con la cantidad repuesta
-            // Verifica que hay exactamente 1 reposición en la BD
-            Assert.Equal(1, _context.Reposiciones.Count());
-            // Verifica que el stock del libro 1 pasó de 0 a 5
-            Assert.Equal(5, _context.Libros.First(l => l.Id == 1).Stock);
-        }
+    Assert.Equal(expectedReposicionDetailDTO, actualReposicionDetailDTO);
+    // El precio total (10 x 5) debe ser 50
+    Assert.Equal(50m, actualReposicionDetailDTO.TotalPrice);
+
+    //además, comprobamos en la base de datos (con un contexto nuevo) que se ha guardado todo
+    using var contextoNuevo = CreateContext();
+    var reposicionGuardada = contextoNuevo.Reposiciones
+        .Include(r => r.ReposicionItems)
+        .Include(r => r.MetodoPago)
+        .Include(r => r.Usuario)
+        .Single();
+
+    Assert.Equal(50m, reposicionGuardada.PrecioTotal);
+    Assert.Equal(_comentario, reposicionGuardada.Comentario);
+    Assert.Single(reposicionGuardada.ReposicionItems!);
+    Assert.Equal(1, reposicionGuardada.ReposicionItems!.Single().LibroId);
+    Assert.Equal(5, reposicionGuardada.ReposicionItems!.Single().CantidadReposicion);
+    Assert.IsType<Visa>(reposicionGuardada.MetodoPago);
+
+    //los datos del formulario se guardan en el usuario
+    Assert.Equal(nombreNuevo, reposicionGuardada.Usuario!.Name);
+    Assert.Equal($"{_apellido1} {_apellido2}", reposicionGuardada.Usuario.Surname);
+    Assert.Equal(_telefono, reposicionGuardada.Usuario.PhoneNumber);
+
+    //reponer sube el stock del libro 1 (de 0 a 5) y no toca el del libro 2
+    Assert.Equal(5, contextoNuevo.Libros.Single(l => l.Id == 1).Stock);
+    Assert.Equal(3, contextoNuevo.Libros.Single(l => l.Id == 2).Stock);
+}
 
         // NUEVO: cubre las ramas GooglePay y PayPal del switch de metodoPago
         // Theory con InlineData: se ejecuta una vez por cada línea de datos
