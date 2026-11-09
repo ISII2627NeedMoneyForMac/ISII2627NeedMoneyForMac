@@ -53,10 +53,18 @@ namespace AppForSEII.UT.SubastasController_test
         // SubastaForCreateDTO(userName, nombre, apellidos, telefono, metodoPago, descripcion, subastaItems)
         // Método auxiliar que construye un DTO de creación; descripcion y metodoPago tienen valores por defecto
         private static SubastaForCreateDTO NuevaSubasta(string usuarioUserName, List<SubastaItemDTO> items,
-            string? descripcion = null, MetodoPagoSubastaTipos metodoPago = MetodoPagoSubastaTipos.GooglePay)
+            string? descripcion = null, MetodoPagoSubastaTipos metodoPago = MetodoPagoSubastaTipos.GooglePay, string nombre="Pedro")
         {
             // Nombre, apellidos y teléfono son fijos en todos los tests
-            return new SubastaForCreateDTO(usuarioUserName, "Pedro", "Jackson Díaz", "612345678",
+            return new SubastaForCreateDTO(usuarioUserName, nombre, "Jackson Díaz", "612345678",
+                metodoPago, descripcion, items);
+        }
+
+        private static SubastaForCreateDTO NuevaSubastaExamen(string usuarioUserName, List<SubastaItemDTO> items,
+            string? descripcion = null, MetodoPagoSubastaTipos metodoPago = MetodoPagoSubastaTipos.GooglePay, string nombre="Paco")
+        {
+            // Nombre, apellidos y teléfono son fijos en todos los tests
+            return new SubastaForCreateDTO(usuarioUserName, nombre, "Jackson Díaz", "612345678",
                 metodoPago, descripcion, items);
         }
 
@@ -94,7 +102,7 @@ namespace AppForSEII.UT.SubastasController_test
                 new List<SubastaItemDTO> { Item(1, 10.5) });
 
             // Caso: usuario que no existe en la BD
-            var subastaUsuarioNoRegistrado = NuevaSubasta("nadie@uclm.es",
+            var subastaUsuarioNoRegistrado = NuevaSubasta("nadie@uclm.es",    
                 new List<SubastaItemDTO> { Item(1, 10) });
 
             // Caso: libro con id 99, que no existe
@@ -104,6 +112,10 @@ namespace AppForSEII.UT.SubastasController_test
             // Caso: libro 3 (Dune), que tiene stock 0
             var subastaLibroSinStock = NuevaSubasta("peter@uclm.es",
                 new List<SubastaItemDTO> { Item(3, 10) });
+
+            //Caso Exámen: Paco o Pepe pujan
+            var subastaPujaPacoPepe = NuevaSubastaExamen("peter@uclm.es",
+                new List<SubastaItemDTO> { Item(1, 10) });
 
             // Lista de casos: cada fila es { DTO de entrada, mensaje de error esperado }
             var allTests = new List<object[]>
@@ -117,6 +129,7 @@ namespace AppForSEII.UT.SubastasController_test
                 new object[] { subastaUsuarioNoRegistrado, "Error! UserName is not registered" },
                 new object[] { subastaLibroInexistente, "Error! El libro con id '99' no existe" },
                 new object[] { subastaLibroSinStock, "Error! El libro 'Dune' no está disponible para subasta" },
+                new object[] {subastaPujaPacoPepe, "¡Error!, los Pacos y los Pepes no pueden pujar" }
             };
 
             // Devolvemos los casos a xUnit
