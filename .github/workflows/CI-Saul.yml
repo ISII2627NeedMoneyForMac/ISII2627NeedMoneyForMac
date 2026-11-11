@@ -1,0 +1,56 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: IntegraciónContinua para .NET Saul
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      API: ./src/AppForSEII.API/AppForSEII.API.csproj
+      WEB: ./src/AppForSEII.Web/AppForSEII.Web.csproj
+      UT: ./test/AppForSEII.UT/AppForSEII.UT.csproj
+      UIT: ./test/AppForSEII.UIT/AppForSEII.UIT.csproj
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: |
+          dotnet restore ${{ env.API }}
+          dotnet restore ${{ env.WEB }}
+          dotnet restore ${{ env.UT }}
+          dotnet restore ${{ env.UIT }}
+
+      - name: Build the solution
+        run: |
+          dotnet build ${{ env.API }} --configuration Release --no-restore
+          dotnet build ${{ env.WEB }} --configuration Release --no-restore
+          dotnet build ${{ env.UT }} --configuration Release --no-restore
+          dotnet build ${{ env.UIT }} --configuration Release --no-restore
+
+      - name: Run unit tests with report
+        run: dotnet test ${{ env.UT }} --configuration Release --no-build --logger "trx;LogFileName=TestResults.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: ./test/AppForSEII.UT/TestResults/TestResults.trx
