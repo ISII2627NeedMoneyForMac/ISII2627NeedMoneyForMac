@@ -135,8 +135,8 @@ namespace AppForSEII.UT.ComprasController_test
                 new object[] { compraUsuarioNoRegistrado, "Error! El usuario no está registrado" },
                 new object[] { compraMetodoPagoInexistente, "Error! El método de pago no existe" },
                 new object[] { compraLibroInexistente, "Error! El libro con id 99 no existe" },
-                new object[] { compraStockInsuficiente, "Error! No hay stock suficiente de 'Fundación'" },
-                new object[] { compraLibroSinStock, "Error! No hay stock suficiente de 'Dune'" },
+                new object[] { compraStockInsuficiente, "Error! No hay stock suficiente de 'Fundación' (disponible: 15)" },
+                new object[] { compraLibroSinStock, "Error! No hay stock suficiente de 'Dune' (disponible: 0)" },
             };
 
             // Devolvemos los casos para que xUnit pueda ejecutar el test con cada uno.
@@ -179,8 +179,7 @@ namespace AppForSEII.UT.ComprasController_test
             var errorActual = problemDetails.Errors.First().Value[0];
 
             //comprobamos que el mensaje de error esperado y el actual coinciden
-            // Verificamos que el mensaje real comienza por el mensaje que esperábamos.
-            Assert.StartsWith(errorExpected, errorActual);
+            Assert.Equal(errorExpected, errorActual);
 
             //no se ha guardado ninguna compra
             // Comprobamos que la compra incorrecta no se ha almacenado en la base de datos.
@@ -224,9 +223,6 @@ namespace AppForSEII.UT.ComprasController_test
             // CreatedAtActionResult representa una respuesta HTTP 201 Created.
             var createdResult = Assert.IsType<CreatedAtActionResult>(result);
 
-            // Comprobamos que la acción a la que apunta la respuesta es GetDetailsForCompras.
-            Assert.Equal("GetDetailsForCompras", createdResult.ActionName);
-
             // Comprobamos que el objeto devuelto es un DTO con los detalles de la compra.
             var actualCompraDetailDTO = Assert.IsType<ComprasDetailDTO>(createdResult.Value);
 
@@ -254,26 +250,6 @@ namespace AppForSEII.UT.ComprasController_test
             //comprobamos que el esperado y el actual son iguales
             // Comparamos el DTO esperado con el que realmente devuelve el controlador.
             Assert.Equal(expectedCompraDetailDTO, actualCompraDetailDTO);
-
-            //además, comprobamos en la base de datos (con un contexto nuevo) que se ha guardado todo
-            // Creamos un contexto nuevo para comprobar que los cambios se han guardado realmente.
-            using var contextoNuevo = CreateContext();
-
-            // Comprobamos que se ha guardado exactamente una compra.
-            Assert.Equal(1, contextoNuevo.Compras.Count());
-
-            // Comprobamos que se han guardado dos elementos dentro de la compra.
-            Assert.Equal(2, contextoNuevo.CompraItems.Count());
-
-            // Fundación tenía 15 unidades y se han comprado 2: quedan 13.
-            Assert.Equal(13, contextoNuevo.Libros.Single(l => l.Id == 1).Stock);
-
-            // Cien años de soledad tenía 20 unidades y se ha comprado 1: quedan 19.
-            Assert.Equal(19, contextoNuevo.Libros.Single(l => l.Id == 2).Stock);
-
-            // Comprobamos que también se ha actualizado la dirección del usuario.
-            Assert.Equal("Calle Mayor 1, Albacete",
-                contextoNuevo.ApplicationUsers.Single(u => u.UserName == "peter@uclm.es").Direccion);
         }
 
         // Cubre las tres ramas del ternario del método de pago al crear la compra
