@@ -41,7 +41,7 @@ namespace AppForSEII.API.DTOs.CompraDTOs
 
         public DateTime FechaCompra { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "El precio total no puede ser negativo")]
+        [Range(0, int.MaxValue, ErrorMessage = "El precio total no puede ser negativo")]
         public decimal PrecioTotal { get; set; }
 
         public string MetodoPago { get; set; } = "MetodoPago";

@@ -25,7 +25,7 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         public string Titulo { get; set; } = "Título";
 
         [Required]
-        [Range(0, double.MaxValue, ErrorMessage = "El precio de compra no puede ser negativo")]
+        [Range(0, int.MaxValue, ErrorMessage = "El precio de compra no puede ser negativo")]
         public decimal PrecioCompra { get; set; }
 
         public DateTime FechaLanzamiento { get; set; }
