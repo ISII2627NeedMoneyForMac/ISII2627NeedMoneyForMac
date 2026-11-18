@@ -30,7 +30,7 @@ namespace AppForSEII.API.DTOs.CompraDTOs
         [StringLength(100, ErrorMessage = "La editorial debe tener un máximo de 100 caracteres")]
         public string Editorial { get; set; } = "Editorial";
 
-        [Range(0, double.MaxValue, ErrorMessage = "El precio no puede ser negativo")]
+        [Range(0, int.MaxValue, ErrorMessage = "El precio no puede ser negativo")]
         public decimal PrecioCompra { get; set; }
 
         [Required]
