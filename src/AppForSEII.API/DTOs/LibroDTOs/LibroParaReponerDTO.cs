@@ -37,7 +37,7 @@ namespace AppForSEII.API.DTOs.LibroDTOs
         [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Date)]
         public DateTime FechaLanzamiento { get; set; } = DateTime.Today;
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "El precio de reposición debe ser mayor que 0")]
+        [Range(0.01, int.MaxValue, ErrorMessage = "El precio de reposición debe ser mayor que 0")]
         public decimal PrecioReposicion { get; set; } = 0.01m;
 
         [StringLength(100, ErrorMessage = "El autor debe tener un máximo de 100 caracteres")]
