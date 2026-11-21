@@ -1,0 +1,189 @@
+@page "/reposiciones/listlibrosparareponer"
+@using AppForSEII.Web.API
+@using AppForSEII.Web.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@inject ILogger<ListLibrosParaReponer> logger
+@inject AppForSEIIAPIClient apiservice
+@inject ReposicionStateContainer reposicionState
+@inject NavigationManager navigation
+
+@attribute [Authorize]
+
+<h3>Seleccionar libros para reponer</h3>
+<div class="container-fluid">
+    <div class="row">
+        <div class="d-flex justify-content-between">
+            <div><b>Libros seleccionados:</b> @reposicion.ReposicionItems.Count</div>
+            <button class="btn btn-primary" id="Reponer" @onclick="@ReponerLibros" disabled="@ReponerButtonDisabled">Reponer libros</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <button class="btn btn-outline-primary" id="showReposicionCart" @onclick="@ToggleReposicionCart">Carrito de reposición: @TotalText €</button>
+    </div>
+
+    <div class="row" hidden="@hiddenReposicionCart">
+        @foreach (ReposicionItemDTO item in reposicion.ReposicionItems)
+        {
+            <ReposicionItem Item="item"
+                            OnRemovedItem="@(() => RemoveReposicionItem(item))"
+                            OnQuantityChanged="@(_ => StateHasChanged())"></ReposicionItem>
+        }
+    </div>
+
+    <div class="row">
+        <p></p>
+        <h5>Filtrar libros</h5>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Autor</span>
+            </div>
+            <select class="form-select" aria-label="Autor" @bind="autorSeleccionado" id="selectAutor">
+                <option value="Todos" selected>Todos</option>
+                @foreach (string a in autores)
+                {
+                    <option value="@a" id="autorSelected_@a">@a</option>
+                }
+            </select>
+            <div class="input-group-prepend">
+                <span class="input-group-text">Género</span>
+            </div>
+            <select class="form-select" aria-label="Género" @bind="generoSeleccionado" id="selectGenero">
+                <option value="Todos" selected>Todos</option>
+                @foreach (string g in generos)
+                {
+                    <option value="@g" id="generoSelected_@g">@g</option>
+                }
+            </select>
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" id="searchLibros" @onclick="@SearchLibros">Buscar libros para reponer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <div class="container-fluid">
+            @if (Libros == null || Libros.Count() == 0)
+            {
+                <p><em>No hay libros disponibles para reponer</em></p>
+            }
+            else
+            {
+                <div class="mh-100 table-responsive">
+                    <table class="table table-condensed table-hover" id="TableOfLibros">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Autor</th>
+                                <th>Género</th>
+                                <th>Fecha de lanzamiento</th>
+                                <th>Precio de reposición</th>
+                                <th>Reponer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var libro in Libros)
+                            {
+                                <tr id="LibroData_@libro.Titulo">
+                                    <td>@libro.Titulo</td>
+                                    <td>@libro.Autor</td>
+                                    <td>@libro.Genero</td>
+                                    <td>@libro.FechaLanzamiento.DateTime.ToShortDateString()</td>
+                                    <td>@libro.PrecioReposicion</td>
+                                    <td>
+                                        <button class="btn btn-outline-secondary" id="libroToRepone_@libro.Titulo" @onclick="@(() => AddLibro(libro))">Añadir</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@*diálogo modal para informar al usuario de los problemas*@
+@if (DialogOKIsOpen)
+{
+    <Dialog Caption="Error!"
+            Message="@DialogOKMessage"
+            OnClose="@OnDialogOKClose"
+            Type=Dialog.Category.Okay>
+    </Dialog>
+}
+
+@code {
+    private bool DialogOKIsOpen;
+    private string DialogOKMessage = "";
+    private void OpenDialogOK(string message)
+    {
+        DialogOKIsOpen = true;
+        DialogOKMessage = message;
+    }
+    private Task OnDialogOKClose()
+    {
+        DialogOKIsOpen = false;
+        return Task.CompletedTask;
+    }
+
+    private bool hiddenReposicionCart = true;
+    private void ToggleReposicionCart() => hiddenReposicionCart = !hiddenReposicionCart;
+
+    private ICollection<LibroParaReponerDTO>? Libros { get; set; } = new List<LibroParaReponerDTO>();
+
+    private ICollection<string> autores = new List<string>();
+    private ICollection<string> generos = new List<string>();
+    private string autorSeleccionado = "Todos";
+    private string generoSeleccionado = "Todos";
+
+    private ReposicionForCreateDTO reposicion => reposicionState.Reposicion;
+    private bool ReponerButtonDisabled => reposicion.ReposicionItems.Count == 0;
+
+    // el total se calcula aquí a partir de los items (precio x cantidad)
+    private string TotalText => reposicion.ReposicionItems
+        .Sum(ri => ri.PrecioReposicion * ri.CantidadReposicion).ToString("N2");
+
+    private void AddLibro(LibroParaReponerDTO libro) => reposicionState.AddLibroToReposicion(libro);
+
+    private void RemoveReposicionItem(ReposicionItemDTO item)
+    {
+        reposicionState.RemoveReposicionItem(item);
+        if (reposicion.ReposicionItems.Count == 0) hiddenReposicionCart = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // primera carga sin filtros: con ella rellenamos los desplegables
+        await SearchLibros();
+        autores = Libros!.Select(l => l.Autor).Distinct().OrderBy(x => x).ToList();
+        generos = Libros!.Select(l => l.Genero).Distinct().OrderBy(x => x).ToList();
+    }
+
+    protected async Task SearchLibros()
+    {
+        string? autor = autorSeleccionado == "Todos" ? null : autorSeleccionado;
+        string? genero = generoSeleccionado == "Todos" ? null : generoSeleccionado;
+
+        try
+        {
+            Libros = await apiservice.GetLibrosParaReponerAsync(autor, genero);
+        }
+        catch (ApiException)
+        {
+            Libros = new List<LibroParaReponerDTO>();
+            logger.LogError("Error! There was an error while connecting to the GetLibrosParaReponerAsync service");
+        }
+    }
+
+    private void ReponerLibros()
+    {
+        if (reposicion.ReposicionItems.Any(i => i.CantidadReposicion < 2))
+        {
+            OpenDialogOK("La cantidad de reposición debe ser mayor que 1");
+            return;
+        }
+        navigation.NavigateTo("/reposiciones/createreposicion");
+    }
+}
