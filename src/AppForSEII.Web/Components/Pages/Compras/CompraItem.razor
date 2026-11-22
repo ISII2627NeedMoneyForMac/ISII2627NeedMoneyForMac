@@ -1,0 +1,28 @@
+@using AppForSEII.Web.API
+
+<div class="card" style="width: 18rem;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div class="p-2">
+                <p class="card-title" id="LibroSelected_@Item.Titulo">@Item.Titulo (@Item.PrecioCompra €)</p>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Cantidad</span>
+                    <input type="number" min="1" class="form-control" id="cantidad_@Item.Titulo"
+                           @bind="Item.Cantidad" @bind:after="() => OnQuantityChanged.InvokeAsync(Item)" />
+                </div>
+            </div>
+            <div class="p-2">
+                <button class="btn-close" aria-label="Close" id="removeLibro_@Item.Titulo"
+                        @onclick="@(() => OnRemovedItem.InvokeAsync(Item))"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CompraItemDTO Item { get; set; } = default!;
+
+    [Parameter] public EventCallback<CompraItemDTO> OnRemovedItem { get; set; }
+
+    [Parameter] public EventCallback<CompraItemDTO> OnQuantityChanged { get; set; }
+}

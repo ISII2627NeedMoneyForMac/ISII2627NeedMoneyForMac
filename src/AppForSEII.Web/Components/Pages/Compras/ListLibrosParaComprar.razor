@@ -1,0 +1,192 @@
+@page "/compras/listlibrosparacomprar"
+@using AppForSEII.Web.API
+@using AppForSEII.Web.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@inject ILogger<ListLibrosParaComprar> logger
+@inject AppForSEIIAPIClient apiservice
+@inject CompraStateContainer compraState
+@inject NavigationManager navigation
+
+@attribute [Authorize]
+
+<h3>Seleccionar libros para comprar</h3>
+<div class="container-fluid">
+    <div class="row">
+        <div class="d-flex justify-content-between">
+            <div><b>Libros seleccionados:</b> @compra.Items.Count</div>
+            <button class="btn btn-primary" id="Comprar" @onclick="@ComprarLibros" disabled="@ComprarButtonDisabled">Comprar libros</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <button class="btn btn-outline-primary" id="showCompraCart" @onclick="@ToggleCompraCart">Carrito de compra: @TotalText €</button>
+    </div>
+
+    <div class="row" hidden="@hiddenCompraCart">
+        @foreach (CompraItemDTO item in compra.Items)
+        {
+            <CompraItem Item="item"
+                        OnRemovedItem="@(() => RemoveCompraItem(item))"
+                        OnQuantityChanged="@(_ => StateHasChanged())"></CompraItem>
+        }
+    </div>
+
+    <div class="row">
+        <p></p>
+        <h5>Filtrar libros</h5>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Género</span>
+            </div>
+            <select class="form-select" aria-label="Género" @bind="generoSeleccionado" id="selectGenero">
+                <option value="Todos" selected>Todos</option>
+                @foreach (string g in generos)
+                {
+                    <option value="@g" id="generoSelected_@g">@g</option>
+                }
+            </select>
+            <div class="input-group-prepend">
+                <span class="input-group-text">Precio mínimo</span>
+            </div>
+            <input type="number" step="0.01" class="form-control" id="precioMin" @bind="precioMin" />
+            <div class="input-group-prepend">
+                <span class="input-group-text">Precio máximo</span>
+            </div>
+            <input type="number" step="0.01" class="form-control" id="precioMax" @bind="precioMax" />
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" id="searchLibros" @onclick="@SearchLibros">Buscar libros para comprar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <div class="container-fluid">
+            @if (Libros == null || Libros.Count() == 0)
+            {
+                <p><em>No hay libros disponibles para comprar</em></p>
+            }
+            else
+            {
+                <div class="mh-100 table-responsive">
+                    <table class="table table-condensed table-hover" id="TableOfLibros">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Género</th>
+                                <th>Editorial</th>
+                                <th>Fecha de lanzamiento</th>
+                                <th>Precio de compra</th>
+                                <th>Comprar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var libro in Libros)
+                            {
+                                <tr id="LibroData_@libro.Titulo">
+                                    <td>@libro.Titulo</td>
+                                    <td>@libro.Genero</td>
+                                    <td>@libro.Editorial</td>
+                                    <td>@libro.FechaLanzamiento.DateTime.ToShortDateString()</td>
+                                    <td>@libro.PrecioCompra</td>
+                                    <td>
+                                        <button class="btn btn-outline-secondary" id="libroToBuy_@libro.Titulo" @onclick="@(() => AddLibro(libro))">Añadir</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@*diálogo modal para informar al usuario de los problemas*@
+@if (DialogOKIsOpen)
+{
+    <Dialog Caption="Error!"
+            Message="@DialogOKMessage"
+            OnClose="@OnDialogOKClose"
+            Type=Dialog.Category.Okay>
+    </Dialog>
+}
+
+@code {
+    private bool DialogOKIsOpen;
+    private string DialogOKMessage = "";
+    private void OpenDialogOK(string message)
+    {
+        DialogOKIsOpen = true;
+        DialogOKMessage = message;
+    }
+    private Task OnDialogOKClose()
+    {
+        DialogOKIsOpen = false;
+        return Task.CompletedTask;
+    }
+
+    private bool hiddenCompraCart = true;
+    private void ToggleCompraCart() => hiddenCompraCart = !hiddenCompraCart;
+
+    private ICollection<LibroParaComprarDTO>? Libros { get; set; } = new List<LibroParaComprarDTO>();
+
+    private ICollection<string> generos = new List<string>();
+    private string generoSeleccionado = "Todos";
+    private double? precioMin;
+    private double? precioMax;
+
+    private CompraForCreateDTO compra => compraState.Compra;
+    private bool ComprarButtonDisabled => compra.Items.Count == 0;
+
+    // el total lo calcula el StateContainer (precio x cantidad de cada libro)
+    private string TotalText => compraState.PrecioTotal.ToString("N2");
+
+    private void AddLibro(LibroParaComprarDTO libro) => compraState.AddLibroToCompra(libro);
+
+    private void RemoveCompraItem(CompraItemDTO item)
+    {
+        compraState.RemoveCompraItem(item);
+        if (compra.Items.Count == 0) hiddenCompraCart = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // primera carga sin filtros: con ella rellenamos el desplegable de géneros
+        await SearchLibros();
+        generos = Libros!.Select(l => l.Genero).Distinct().OrderBy(x => x).ToList();
+    }
+
+    protected async Task SearchLibros()
+    {
+        // flujo alternativo: error en el rango de precios
+        if (precioMin != null && precioMax != null && precioMin > precioMax)
+        {
+            OpenDialogOK("El precio mínimo no puede ser mayor que el precio máximo");
+            return;
+        }
+
+        string? genero = generoSeleccionado == "Todos" ? null : generoSeleccionado;
+
+        try
+        {
+            Libros = await apiservice.GetLibrosParaComprarAsync(genero, precioMin, precioMax);
+        }
+        catch (ApiException)
+        {
+            Libros = new List<LibroParaComprarDTO>();
+            logger.LogError("Error! There was an error while connecting to the GetLibrosParaComprarAsync service");
+        }
+    }
+
+    private void ComprarLibros()
+    {
+        if (compra.Items.Any(i => i.Cantidad < 1))
+        {
+            OpenDialogOK("La cantidad de cada libro debe ser al menos 1");
+            return;
+        }
+        // la página del formulario se hará en la siguiente tarea
+        navigation.NavigateTo("/compras/createcompra");
+    }
+}
