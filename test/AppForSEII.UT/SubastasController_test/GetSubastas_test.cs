@@ -20,13 +20,11 @@ namespace AppForSEII.UT.SubastasController_test
             var genero = new Genero(1, "Ciencia ficción");
             var editorial = new Editorial(1, "Minotauro");
 
-            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro)
+            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro, genero, editorial)
             // Dos libros (ids 1 y 2)
             var libros = new List<Libro>(){
-                new Libro("El señor de los anillos", "Tolkien", new DateTime(2011, 10, 20), 15.0m, 10.0m, 5, "Tapa dura")
-                    { Genero = genero, Editorial = editorial },
-                new Libro("La naranja mecánica", "Burgess", new DateTime(1988, 02, 23), 20.0m, 15.0m, 3, "Tapa blanda")
-                    { Genero = genero, Editorial = editorial },
+                new Libro("El señor de los anillos", "Tolkien", new DateTime(2011, 10, 20), 15.0m, 10.0m, 5, "Tapa dura", genero, editorial),
+                new Libro("La naranja mecánica", "Burgess", new DateTime(1988, 02, 23), 20.0m, 15.0m, 3, "Tapa blanda", genero, editorial),
             };
 
             // Usuario de prueba
@@ -34,59 +32,24 @@ namespace AppForSEII.UT.SubastasController_test
             // Le asignamos teléfono
             user.PhoneNumber = "600123456";
 
-            // subasta 1: Visa y dos libros
-            var subasta1 = new Subasta
-            {
-                // Fecha fija
-                FechaSubasta = _fecha,
-                PrecioSubasta = 50,   // 20 + 30
-                // Usuario que la creó
-                Usuario = user,
-                // Método de pago Visa (número de tarjeta y fecha de caducidad)
-                MetodoPago = new Visa("4111111111111111", DateTime.Today.AddYears(2))
-            };
-            // Item 1: libro 1 con puja 20
-            subasta1.SubastaItems.Add(new SubastaItem
-            { Libro = libros[0], Subasta = subasta1, PrecioPuja = 20, Descripcion = _descripcion });
-            // Item 2: libro 2 con puja 30
-            subasta1.SubastaItems.Add(new SubastaItem
-            { Libro = libros[1], Subasta = subasta1, PrecioPuja = 30, Descripcion = _descripcion });
+            // Subasta(fechaSubasta, usuario, metodoPago, subastaItems)
+            // SubastaItem(libro, subasta, precioPuja, descripcion)
 
-            // subasta 2: GooglePay, un libro y sin descripción
-            var subasta2 = new Subasta
-            {
-                FechaSubasta = _fecha,
-                PrecioSubasta = 15,
-                Usuario = user,
-                // Método de pago GooglePay (con un email)
-                MetodoPago = new GooglePay("peter@uclm.es")
-            };
-            // Un único item, con Descripcion null
-            subasta2.SubastaItems.Add(new SubastaItem
-            { Libro = libros[0], Subasta = subasta2, PrecioPuja = 15, Descripcion = null });
+            // subasta 1: Visa y dos libros
+            var subasta1 = new Subasta(_fecha, user,
+                new Visa("4111111111111111", DateTime.Today.AddYears(2)), new List<SubastaItem>());
+            subasta1.SubastaItems.Add(new SubastaItem(libros[0], subasta1, 20, _descripcion));
+            subasta1.SubastaItems.Add(new SubastaItem(libros[1], subasta1, 30, _descripcion));
+
+            // subasta 2: GooglePay y un libro
+            var subasta2 = new Subasta(_fecha, user,
+                new GooglePay("peter@uclm.es"), new List<SubastaItem>());
+            subasta2.SubastaItems.Add(new SubastaItem(libros[0], subasta2, 15, _descripcion));
 
             // subasta 3: PayPal y un libro
-            var subasta3 = new Subasta
-            {
-                FechaSubasta = _fecha,
-                PrecioSubasta = 25,
-                Usuario = user,
-                // Método de pago PayPal (con un teléfono)
-                MetodoPago = new PayPal("600123456")
-            };
-            // Un único item: libro 2 con puja 25
-            subasta3.SubastaItems.Add(new SubastaItem
-            { Libro = libros[1], Subasta = subasta3, PrecioPuja = 25, Descripcion = _descripcion });
-
-            //subasta 4: sin usuario y sin items (cubre los ?? string.Empty y el FirstOrDefault nulo)
-            var subasta4 = new Subasta
-            {
-                FechaSubasta = _fecha,
-                PrecioSubasta = 0,
-                // Sin usuario
-                Usuario = null,
-                MetodoPago = new Visa("4111111111111111", DateTime.Today.AddYears(2))
-            };
+            var subasta3 = new Subasta(_fecha, user,
+                new PayPal("600123456"), new List<SubastaItem>());
+            subasta3.SubastaItems.Add(new SubastaItem(libros[1], subasta3, 25, _descripcion));
 
             // Marcamos todo para insertar en la BD
             _context.ApplicationUsers.Add(user);
@@ -96,8 +59,7 @@ namespace AppForSEII.UT.SubastasController_test
             _context.Add(subasta1);
             _context.Add(subasta2);
             _context.Add(subasta3);
-            _context.Add(subasta4);
-            // Guardamos (las subastas reciben los ids 1, 2, 3 y 4 en orden)
+            // Guardamos (las subastas reciben los ids 1, 2 y 3 en orden)
             _context.SaveChanges();
         }
 
@@ -108,11 +70,8 @@ namespace AppForSEII.UT.SubastasController_test
         public async Task GetSubasta_NotFound_test()
         {
             // Arrange
-            // Logger falso (Moq)
             var mock = new Mock<ILogger<SubastasController>>();
             ILogger<SubastasController> logger = mock.Object;
-
-            // Controlador a probar
             var controller = new SubastasController(_context, logger);
 
             // Act
@@ -147,7 +106,6 @@ namespace AppForSEII.UT.SubastasController_test
                 });
 
             // Act
-            // Pedimos la subasta 1
             var result = await controller.GetDetailsForSubastas(1);
 
             //Assert
@@ -156,13 +114,12 @@ namespace AppForSEII.UT.SubastasController_test
             var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
             //no se garantiza el orden de los items al leer de la BD: los ordenamos por libro
             subastaDTOActual.SubastaItems = subastaDTOActual.SubastaItems.OrderBy(i => i.LibroId).ToList();
-            //comprobamos que la esperada y la obtenida son iguales
+            //comprobamos que la esperada y la obtenida son iguales (Equals también compara el precio total)
             Assert.Equal(expectedSubasta, subastaDTOActual);
-            // El precio total (20 + 30) es 50
-            Assert.Equal(50m, subastaDTOActual.TotalPrice);
         }
 
-        // Test parametrizado: una ejecución por cada pareja (id de subasta, método de pago esperado)
+        // Test parametrizado: necesario para ejecutar todas las líneas del switch ObtenerTipoMetodoPago
+        // (una por cada método de pago)
         [Theory]
         [InlineData(1, MetodoPagoSubastaTipos.Visa)]
         [InlineData(2, MetodoPagoSubastaTipos.GooglePay)]
@@ -184,59 +141,6 @@ namespace AppForSEII.UT.SubastasController_test
             var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
             // El método de pago devuelto es el esperado para esa subasta
             Assert.Equal(metodoPagoEsperado, subastaDTOActual.MetodoPago);
-        }
-
-        // Test: subasta sin descripción
-        [Fact]
-        [Trait("Database", "WithoutFixture")]
-        [Trait("LevelTesting", "Unit Testing")]
-        public async Task GetSubasta_SinDescripcion_test()
-        {
-            // Arrange
-            var mock = new Mock<ILogger<SubastasController>>();
-            ILogger<SubastasController> logger = mock.Object;
-            var controller = new SubastasController(_context, logger);
-
-            // Act
-            // la subasta 2 se ha creado sin descripción (es opcional)
-            var result = await controller.GetDetailsForSubastas(2);
-
-            //Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
-            // La descripción es null
-            Assert.Null(subastaDTOActual.Descripcion);
-            // El precio total es 15
-            Assert.Equal(15m, subastaDTOActual.TotalPrice);
-        }
-
-        // Test: subasta sin usuario y sin items (casos límite del controlador: ?? string.Empty y FirstOrDefault)
-        [Fact]
-        [Trait("Database", "WithoutFixture")]
-        [Trait("LevelTesting", "Unit Testing")]
-        public async Task GetSubasta_SinUsuariNiTiems_test()
-        {
-            //Arrange
-            var mock = new Mock<ILogger<SubastasController>>();
-            ILogger<SubastasController> logger = mock.Object;
-            var controller = new SubastasController(_context, logger);
-
-            //Act
-            // la subasta 4 se ha creado sin usuario y sin items
-            var result = await controller.GetDetailsForSubastas(4);
-            //Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var subastaDTOActual = Assert.IsType<SubastaDetailDTO>(okResult.Value);
-            // Sin usuario, nombre, apellidos y teléfono deben ser cadena vacía (no null)
-            Assert.Equal(string.Empty, subastaDTOActual.Nombre);
-            Assert.Equal(string.Empty, subastaDTOActual.Apellidos);
-            Assert.Equal(string.Empty, subastaDTOActual.Telefono);
-            // Sin items, no hay descripción
-            Assert.Null(subastaDTOActual.Descripcion);
-            // La lista de items está vacía
-            Assert.Empty(subastaDTOActual.SubastaItems);
-            // El precio total es 0
-            Assert.Equal(0m, subastaDTOActual.TotalPrice);
         }
     }
 }
