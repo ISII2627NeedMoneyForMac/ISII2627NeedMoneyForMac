@@ -2,46 +2,46 @@
 using AppForSEII.API.Controllers;
 // DTOs de subasta (entrada y salida del controlador)
 using AppForSEII.API.DTOs.SubastaDTOs;
-// Para usar Include() al consultar la BD en los tests
-using Microsoft.EntityFrameworkCore;
 
 namespace AppForSEII.UT.SubastasController_test
 {
     // Clase de tests. Hereda de AppForSEII4SqliteUT, que crea una BD SQLite en memoria nueva para cada test
-    // y expone _context (contexto de BD) y CreateContext() (para abrir un contexto nuevo)
     public class CreateSubasta_test : AppForSEII4SqliteUT
     {
-        // Descripción de ejemplo reutilizada en varios tests (const: valor fijo)
+        // Datos fijos reutilizados en los tests (como en CreateRentals_test del ejemplo)
+        private const string _userName = "peter@uclm.es";
         private const string _descripcion = "Subasta de libros de ciencia ficción";
+        private const string _editorial = "Minotauro";
+
+        private const string _libro1Titulo = "El señor de los anillos";
+        private const string _libro1Autor = "Tolkien";
+        private const string _libro2Titulo = "La naranja mecánica";
+        private const string _libro2Autor = "Burgess";
+        private const string _libro3Titulo = "Dune";
+        private const string _libro3Autor = "Frank Herbert";
 
         // El constructor se ejecuta ANTES de cada test: deja la BD con datos de partida
         public CreateSubasta_test()
         {
-            // Creamos un género de ejemplo (id 1)
             var genero = new Genero(1, "Ciencia ficción");
-            // Creamos una editorial de ejemplo (id 1)
-            var editorial = new Editorial(1, "Minotauro");
+            var editorial = new Editorial(1, _editorial);
 
-            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro)
+            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro, genero, editorial)
             // ids: El señor de los anillos = 1, La naranja mecánica = 2, Dune = 3 (sin stock)
             var libros = new List<Libro>(){
-                new Libro("El señor de los anillos", "Tolkien", new DateTime(2011, 10, 20), 15.0m, 10.0m, 5, "Tapa dura")
-                    { Genero = genero, Editorial = editorial },
-                new Libro("La naranja mecánica", "Burgess", new DateTime(1988, 02, 23), 20.0m, 15.0m, 3, "Tapa blanda")
-                    { Genero = genero, Editorial = editorial },
+                new Libro(_libro1Titulo, _libro1Autor, new DateTime(2011, 10, 20), 15.0m, 10.0m, 5, "Tapa dura", genero, editorial),
+                new Libro(_libro2Titulo, _libro2Autor, new DateTime(1988, 02, 23), 20.0m, 15.0m, 3, "Tapa blanda", genero, editorial),
                 // Dune tiene stock 0: sirve para probar el error "sin stock"
-                new Libro("Dune", "Frank Herbert", new DateTime(1965, 8, 1), 20.0m, 12.0m, 0, "Tapa dura")
-                    { Genero = genero, Editorial = editorial },
+                new Libro(_libro3Titulo, _libro3Autor, new DateTime(1965, 8, 1), 20.0m, 12.0m, 0, "Tapa dura", genero, editorial),
             };
 
-            // Usuario de prueba (id "3", nombre, apellido, email/username)
-            ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", "peter@uclm.es");
+            // Usuario de prueba (id, nombre, apellido, email/username)
+            ApplicationUser user = new ApplicationUser("3", "Peter", "Jackson", _userName);
 
             _context.ApplicationUsers.Add(user);
             _context.Add(genero);
             _context.Add(editorial);
             _context.AddRange(libros);
-            // Guardamos todo en la BD de pruebas
             _context.SaveChanges();
         }
 
@@ -50,60 +50,47 @@ namespace AppForSEII.UT.SubastasController_test
         private static SubastaForCreateDTO NuevaSubasta(string usuarioUserName, List<SubastaItemDTO> items,
             string? descripcion = null, MetodoPagoSubastaTipos metodoPago = MetodoPagoSubastaTipos.GooglePay, string nombre = "Pedro")
         {
-            // Apellidos y teléfono son fijos en todos los tests
             return new SubastaForCreateDTO(usuarioUserName, nombre, "Jackson Díaz", "612345678",
                 metodoPago, descripcion, items);
-        }
-
-        // solo se usan LibroId y PrecioPuja: el resto de datos del libro los toma el controlador de la BD
-        private static SubastaItemDTO Item(int libroId, double precioPuja)
-        {
-            return new SubastaItemDTO { LibroId = libroId, PrecioPuja = precioPuja };
         }
 
         // Proporciona los casos de prueba (entrada + error esperado) al [Theory] de errores
         public static IEnumerable<object[]> TestCasesFor_CreateSubasta()
         {
-            // Caso: lista de items vacía
-            var subastaSinLibros = NuevaSubasta("peter@uclm.es", new List<SubastaItemDTO>());
+            // SubastaItemDTO(libroId, titulo, editorial, autor, precioPuja)
+            var subastaSinLibros = NuevaSubasta(_userName, new List<SubastaItemDTO>());
 
-            // Caso: el libro 1 aparece dos veces
-            var subastaLibrosRepetidos = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 10), Item(1, 20) });
+            var subastaLibrosRepetidos = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 10),
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 20) });
 
-            // Caso: puja de 0 (menor que 1)
-            var subastaPujaCero = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 0) });
+            var subastaPujaCero = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 0) });
 
-            // Caso: puja negativa
-            var subastaPujaNegativa = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, -5) });
+            var subastaPujaNegativa = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, -5) });
 
-            // Caso: puja mayor que int.MaxValue (2147483647 + 1)
-            var subastaPujaMayorQueIntMax = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 2147483648d) });
+            var subastaPujaMayorQueIntMax = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 2147483648d) });
 
-            // Caso: puja con decimales
-            var subastaPujaDecimal = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 10.5) });
+            var subastaPujaDecimal = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 10.5) });
 
-            // Caso: usuario que no existe en la BD
-            var subastaUsuarioNoRegistrado = NuevaSubasta("nadie@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 10) });
+            var subastaUsuarioNoRegistrado = NuevaSubasta("nadie@uclm.es", new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 10) });
 
-            // Caso: libro con id 99, que no existe
-            var subastaLibroInexistente = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(99, 10) });
+            // El libro con id 99 no existe en la BD
+            var subastaLibroInexistente = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(99, "Libro inexistente", _editorial, "Autor desconocido", 10) });
 
-            // Caso: libro 3 (Dune), que tiene stock 0
-            var subastaLibroSinStock = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(3, 10) });
+            // Dune (id 3) tiene stock 0
+            var subastaLibroSinStock = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(3, _libro3Titulo, _editorial, _libro3Autor, 10) });
 
             // Caso examen: Paco no puede pujar
-            var subastaPujaPaco = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 10) }, nombre: "Paco");
+            var subastaPujaPaco = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 10) }, nombre: "Paco");
 
-            // Lista de casos: cada fila es { DTO de entrada, mensaje de error esperado }
             var allTests = new List<object[]>
             {             //entrada de CreateSubasta - error esperado
                 new object[] { subastaSinLibros, "Error! Debes incluir al menos un libro en la subasta" },
@@ -118,11 +105,9 @@ namespace AppForSEII.UT.SubastasController_test
                 new object[] { subastaPujaPaco, "¡Error!, los Pacos y los Pepes no pueden pujar" }
             };
 
-            // Devolvemos los casos a xUnit
             return allTests;
         }
 
-        // [Theory]: test parametrizado, se ejecuta una vez por cada caso
         [Theory]
         [Trait("LevelTesting", "Unit Testing")]
         [Trait("Database", "WithoutFixture")]
@@ -132,96 +117,66 @@ namespace AppForSEII.UT.SubastasController_test
             // Arrange
             var mock = new Mock<ILogger<SubastasController>>();
             ILogger<SubastasController> logger = mock.Object;
-
             var controller = new SubastasController(_context, logger);
 
             // Act
             var result = await controller.CreateSubasta(subastaDTO);
 
             // Assert
-            // Comprobamos que la respuesta es BadRequest y obtenemos el error devuelto
+            //comprobamos que la respuesta es BadRequest y obtenemos el error devuelto
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
             var problemDetails = Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
-
-            // Cogemos el primer mensaje del primer error del diccionario de errores
             var errorActual = problemDetails.Errors.First().Value[0];
 
-            // Comprobamos que el mensaje de error esperado y el actual coinciden
+            //comprobamos que el mensaje de error esperado y el actual coinciden
             Assert.Equal(errorExpected, errorActual);
-
-            // No se ha guardado ninguna subasta
+            //no se ha guardado ninguna subasta
             Assert.Empty(_context.Subastas);
         }
 
-        // [Fact]: test simple, sin parámetros
-        [Fact]
+        // Caso feliz: un único test parametrizado con los tres métodos de pago,
+        // necesario para ejecutar todas las líneas del switch CrearMetodoPago
+        [Theory]
+        [InlineData(MetodoPagoSubastaTipos.Visa)]
+        [InlineData(MetodoPagoSubastaTipos.GooglePay)]
+        [InlineData(MetodoPagoSubastaTipos.PayPal)]
         [Trait("LevelTesting", "Unit Testing")]
         [Trait("Database", "WithoutFixture")]
-        public async Task CreateSubasta_VariosErrores_test()
+        public async Task CreateSubasta_Success_test(MetodoPagoSubastaTipos metodoPago)
         {
             // Arrange
             var mock = new Mock<ILogger<SubastasController>>();
             ILogger<SubastasController> logger = mock.Object;
-
-            var controller = new SubastasController(_context, logger);
-
-            // Libros repetidos y usuario no registrado a la vez
-            var subastaDTO = NuevaSubasta("nadie@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 10), Item(1, 20) });
-
-            // Act
-            var result = await controller.CreateSubasta(subastaDTO);
-
-            // Assert
-            // Se devuelven todos los errores, no solo el primero
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            var problemDetails = Assert.IsType<ValidationProblemDetails>(badRequestResult.Value);
-
-            Assert.Contains("Error! Hay libros repetidos en la subasta", problemDetails.Errors["SubastaItems"]);
-            Assert.Contains("Error! UserName is not registered", problemDetails.Errors["SubastaApplicationUser"]);
-            // No se guardó nada
-            Assert.Empty(_context.Subastas);
-        }
-
-        // Único test del caso feliz: todo correcto
-        [Fact]
-        [Trait("LevelTesting", "Unit Testing")]
-        [Trait("Database", "WithoutFixture")]
-        public async Task CreateSubasta_Success_test()
-        {
-            // Arrange
-            var mock = new Mock<ILogger<SubastasController>>();
-            ILogger<SubastasController> logger = mock.Object;
-
             var controller = new SubastasController(_context, logger);
 
             // Subasta válida con dos libros (pujas 20 y 30) y descripción
-            var subastaDTO = NuevaSubasta("peter@uclm.es",
-                new List<SubastaItemDTO> { Item(1, 20), Item(2, 30) }, _descripcion);
+            var subastaDTO = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 20),
+                new SubastaItemDTO(2, _libro2Titulo, _editorial, _libro2Autor, 30) },
+                _descripcion, metodoPago);
 
             // Act
             var result = await controller.CreateSubasta(subastaDTO);
 
             // Assert
-            // Comprobamos que la respuesta es 201 y obtenemos el DTO devuelto
+            //comprobamos que la respuesta es 201 y obtenemos el DTO devuelto
             var createdResult = Assert.IsType<CreatedAtActionResult>(result);
             var actualSubastaDetailDTO = Assert.IsType<SubastaDetailDTO>(createdResult.Value);
 
-            // DTO esperado completo (la fecha la pone el controlador con DateTime.Now,
-            // por eso se copia del actual, ya que no se puede predecir exacta)
+            // DTO esperado (la fecha la pone el controlador con DateTime.Now, por eso se copia del actual)
             var expectedSubastaDetailDTO = new SubastaDetailDTO(1, "Pedro", "Jackson Díaz", "612345678",
-                MetodoPagoSubastaTipos.GooglePay, actualSubastaDetailDTO.FechaSubasta, _descripcion,
+                metodoPago, actualSubastaDetailDTO.FechaSubasta, _descripcion,
                 new List<SubastaItemDTO>()
                 {
-                    new SubastaItemDTO(1, "El señor de los anillos", "Minotauro", "Tolkien", 20),
-                    new SubastaItemDTO(2, "La naranja mecánica", "Minotauro", "Burgess", 30),
+                    new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 20),
+                    new SubastaItemDTO(2, _libro2Titulo, _editorial, _libro2Autor, 30),
                 });
 
-            // Un único Equal que compara todo el objeto
+            //comprobamos que el esperado y el actual son iguales
             Assert.Equal(expectedSubastaDetailDTO, actualSubastaDetailDTO);
         }
 
-        // Test de una excepción: método de pago con un valor no válido
+        // Necesario para ejecutar la línea "_ => throw" del switch CrearMetodoPago
         [Fact]
         [Trait("LevelTesting", "Unit Testing")]
         [Trait("Database", "WithoutFixture")]
@@ -233,13 +188,13 @@ namespace AppForSEII.UT.SubastasController_test
             var controller = new SubastasController(_context, logger);
 
             // Un valor que no existe en el enum: CrearMetodoPago lanza la excepción
-            var subastaDTO = NuevaSubasta("peter@uclm.es", new List<SubastaItemDTO> { Item(1, 10) },
+            var subastaDTO = NuevaSubasta(_userName, new List<SubastaItemDTO> {
+                new SubastaItemDTO(1, _libro1Titulo, _editorial, _libro1Autor, 10) },
                 null, (MetodoPagoSubastaTipos)99);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => controller.CreateSubasta(subastaDTO));
-
-            // No se ha guardado ninguna subasta
+            //no se ha guardado ninguna subasta
             Assert.Empty(_context.Subastas);
         }
     }

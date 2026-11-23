@@ -20,19 +20,16 @@ namespace AppForSEII.UT.LibrosController_test
                 new Editorial(2, "Alfaguara"),
             };
 
-            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro)
+            // Libro(titulo, autor, fechaLanzamiento, precioCompra, precioReposicion, stock, tipoLibro, genero, editorial)
             // ids: Fundación = 1, Cien años de soledad = 2, Dune = 3 (sin stock)
             var libros = new List<Libro>(){
                 // Libro 1: stock 15, editorial Planeta
-                new Libro("Fundación", "Isaac Asimov", new DateTime(1951, 6, 1), 9.95m, 7.50m, 15, "Tapa blanda")
-                    { Genero = genero, Editorial = editoriales[0] },
+                new Libro("Fundación", "Isaac Asimov", new DateTime(1951, 6, 1), 9.95m, 7.50m, 15, "Tapa blanda", genero, editoriales[0]),
                 // Libro 2: stock 20, editorial Alfaguara
-                new Libro("Cien años de soledad", "Gabriel García Márquez", new DateTime(1967, 5, 30), 15.95m, 12.00m, 20, "Tapa dura")
-                    { Genero = genero, Editorial = editoriales[1] },
+                new Libro("Cien años de soledad", "Gabriel García Márquez", new DateTime(1967, 5, 30), 15.95m, 12.00m, 20, "Tapa dura", genero, editoriales[1]),
 
                 //este libro tiene stock = 0, por lo que no debe devolverse nunca
-                new Libro("Dune", "Frank Herbert", new DateTime(1965, 8, 1), 20.0m, 12.00m, 0, "Tapa dura")
-                    { Genero = genero, Editorial = editoriales[0] },
+                new Libro("Dune", "Frank Herbert", new DateTime(1965, 8, 1), 20.0m, 12.00m, 0, "Tapa dura", genero, editoriales[0]),
             };
 
             // Marcamos todo para insertar y lo guardamos en la BD

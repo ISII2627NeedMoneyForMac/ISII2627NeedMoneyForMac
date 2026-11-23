@@ -80,18 +80,19 @@ namespace AppForSEII.API.Controllers
                 .ToList();
 
             // Construimos el DTO de detalle de la subasta
+            // (toda subasta tiene usuario: la crea siempre un cliente conectado, por eso usamos !)
             var detail = new SubastaDetailDTO(subasta.Id,
-                // Nombre del usuario; si el usuario es null (?.) o su nombre es null (??) usamos cadena vacía
-                subasta.Usuario?.Name ?? string.Empty,
-                // Apellidos del usuario (o cadena vacía)
-                subasta.Usuario?.Surname ?? string.Empty,
-                // Teléfono del usuario (o cadena vacía)
-                subasta.Usuario?.PhoneNumber ?? string.Empty,
+                // Nombre del usuario
+                subasta.Usuario!.Name!,
+                // Apellidos del usuario
+                subasta.Usuario.Surname!,
+                // Teléfono del usuario
+                subasta.Usuario.PhoneNumber!,
                 // Convertimos la clase de método de pago (Visa, PayPal...) en el enum del DTO
                 ObtenerTipoMetodoPago(subasta.MetodoPago),
                 // Fecha en que se creó la subasta
                 subasta.FechaSubasta,
-                // La descripción se guarda en cada item; cogemos la del primero (o null si no hay items)
+                // La descripción se guarda en cada item; cogemos la del primero
                 subasta.SubastaItems.Select(si => si.Descripcion).FirstOrDefault(),
                 // Lista de items ya convertidos a DTO
                 items);
@@ -173,16 +174,12 @@ namespace AppForSEII.API.Controllers
                 // Ejecutamos la consulta y obtenemos una lista
                 .ToListAsync();
 
-            // Creamos la nueva entidad Subasta
-            var subasta = new Subasta
-            {
-                // La fecha la pone el servidor: ahora mismo
-                FechaSubasta = DateTime.Now,
-                // Asociamos el usuario encontrado antes
-                Usuario = user,
-                // Creamos el objeto de método de pago según el enum recibido (Visa, GooglePay o PayPal)
-                MetodoPago = CrearMetodoPago(subastaForCreate.MetodoPago)
-            };
+            // Creamos la nueva entidad Subasta (como Rental en el ejemplo):
+            // - fecha: la pone el servidor (ahora mismo)
+            // - usuario: el encontrado antes (user! porque ya comprobamos que no es null)
+            // - método de pago: se crea según el enum recibido (Visa, GooglePay o PayPal)
+            // - lista de items vacía: se rellena en el bucle de abajo
+            var subasta = new Subasta(DateTime.Now, user!, CrearMetodoPago(subastaForCreate.MetodoPago), new List<SubastaItem>());
 
             // Lista donde iremos guardando los items ya en formato DTO para la respuesta
             var itemsDetail = new List<SubastaItemDTO>();
@@ -208,18 +205,12 @@ namespace AppForSEII.API.Controllers
                 // Si existe y tiene stock: todo correcto
                 else
                 {
-                    // Añadimos un nuevo SubastaItem a la subasta
-                    subasta.SubastaItems.Add(new SubastaItem
-                    {
-                        // Libro al que se refiere la puja
-                        Libro = libro,
-                        // Subasta a la que pertenece este item
-                        Subasta = subasta,
-                        // Precio de la puja convertido de double a int (ya validado como entero)
-                        PrecioPuja = (int)item.PrecioPuja,
-                        // Descripción general de la subasta, copiada en cada item
-                        Descripcion = subastaForCreate.Descripcion
-                    });
+                    // Añadimos un nuevo SubastaItem a la subasta:
+                    // - libro al que se refiere la puja
+                    // - subasta a la que pertenece este item
+                    // - precio de la puja convertido de double a int (ya validado como entero)
+                    // - descripción general de la subasta, copiada en cada item
+                    subasta.SubastaItems.Add(new SubastaItem(libro, subasta, (int)item.PrecioPuja, subastaForCreate.Descripcion));
 
                     // Se usan los datos de la BD, no los enviados por el cliente
                     // Añadimos el item en formato DTO para la respuesta

@@ -20,6 +20,17 @@ namespace AppForSEII.API.Models
             PrecioSubasta = precioSubasta;
         }
 
+        // recibe las relaciones y la lista de items, y calcula el precio total a partir de las pujas
+        public Subasta(DateTime fechaSubasta, ApplicationUser usuario, MetodoPago metodoPago, IList<SubastaItem> subastaItems)
+        {
+            PrecioSubasta = subastaItems.Sum(si => si.PrecioPuja);
+
+            FechaSubasta = fechaSubasta;
+            Usuario = usuario;
+            MetodoPago = metodoPago;
+            SubastaItems = subastaItems;
+        }
+
         // Atributos
         [Key]
         [Required]

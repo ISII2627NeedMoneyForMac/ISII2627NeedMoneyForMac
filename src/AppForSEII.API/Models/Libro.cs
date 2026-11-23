@@ -21,6 +21,21 @@ namespace AppForSEII.API.Models
             TipoLibro = tipolibro;
         }
 
+        //Constructor sobrecargado con relaciones
+        public Libro(string titulo, string autor, DateTime fechaLanzamiento, decimal precioCompra, decimal precioReposicion, int stock, string tipolibro, Genero genero, Editorial editorial)
+        {
+            Titulo = titulo;
+            Autor = autor;
+            FechaLanzamiento = fechaLanzamiento;
+            PrecioCompra = precioCompra;
+            PrecioReposicion = precioReposicion;
+            Stock = stock;
+            TipoLibro = tipolibro;
+            Genero = genero;
+            Editorial = editorial;
+        }
+
+
         //Atributos
         [Key]
         [Required]
@@ -56,5 +71,7 @@ namespace AppForSEII.API.Models
         public List<CompraItem>? CompraItems { get; set; }
 
         public IList<ReposicionItem>? ReposicionItems { get; set; }
+
+        public IList<SubastaItem>? SubastaItems { get; set; }
     }
 }

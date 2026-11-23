@@ -19,6 +19,17 @@ namespace AppForSEII.API.Models
             Descripcion = descripcion;
         }
 
+       // Constructor con las relaciones: recibe el libro y la subasta a la que pertenece la puja
+        public SubastaItem(Libro libro, Subasta subasta, int precioPuja, string? descripcion)
+        {
+            Libro = libro;
+            LibroId = libro.Id;
+            Subasta = subasta;
+            SubastaId = subasta.Id;
+            PrecioPuja = precioPuja;
+            Descripcion = descripcion;
+        }
+
         //Atribubtos
         
         public int SubastaId { get; set; }
