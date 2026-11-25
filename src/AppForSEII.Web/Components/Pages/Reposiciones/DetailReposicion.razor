@@ -1,0 +1,125 @@
+@page "/reposiciones/detailreposicion"
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+
+@inject AppForSEIIAPIClient apiservice
+
+@attribute [Authorize]
+
+<h3>Recibo de la reposición</h3>
+
+@if (reposicion == null)
+{
+    <p id="Error">@error</p>
+}
+else
+{
+    @*datos del usuario y de la reposición (paso 7 del flujo básico)*@
+    <table class="table table-borderless table-sm">
+        <tr>
+            <th>Nombre</th>
+            <td id="Nombre">@reposicion.Nombre</td>
+        </tr>
+        <tr>
+            <th>Apellidos</th>
+            <td id="Apellidos">@reposicion.Apellido1 @reposicion.Apellido2</td>
+        </tr>
+        <tr>
+            <th>Teléfono</th>
+            <td id="Telefono">@reposicion.Telefono</td>
+        </tr>
+        <tr>
+            <th>Método de pago</th>
+            <td id="MetodoPago">@reposicion.MetodoPago</td>
+        </tr>
+        <tr>
+            <th>Fecha de la reposición</th>
+            <td id="FechaReposicion">@reposicion.FechaReposicion.DateTime.ToString("dd/MM/yyyy HH:mm:ss")</td>
+        </tr>
+        @*el comentario es opcional: solo se muestra si el usuario lo escribió*@
+        @if (!string.IsNullOrWhiteSpace(reposicion.Comentario))
+        {
+            <tr>
+                <th>Comentario</th>
+                <td id="Comentario">@reposicion.Comentario</td>
+            </tr>
+        }
+    </table>
+
+    <h4>Libros repuestos</h4>
+
+    <div class="mh-100 table-responsive">
+        <table class="table table-condensed table-hover" id="LibrosRepuestos">
+            <thead>
+                <tr>
+                    <th scope="col">Título</th>
+                    <th scope="col">Autor</th>
+                    <th scope="col">Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ReposicionItemDTO item in reposicion.ReposicionItems)
+                {
+                    <tr id="ReposicionItem_@item.Titulo">
+                        <td>@item.Titulo</td>
+                        <td>@item.Autor</td>
+                        <td>@item.CantidadReposicion</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                @*colspan indica que se unen DOS columnas para que el total quede bajo la cantidad*@
+                <tr>
+                    <th scope="row" colspan="2" class="text-end">Precio total</th>
+                    <td id="TotalPrice">@reposicion.TotalPrice.ToString("N2") €</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+
+@code {
+    // id de la reposición, se recibe por la URL: /reposiciones/detailreposicion?ReposicionID=5
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int ReposicionID { get; set; }
+
+    private ReposicionDetailDTO? reposicion;
+    private string error = "";
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // comprobamos qué usuario está logueado
+        string userName = "";
+        if (authenticationState is not null)
+        {
+            var authState = await authenticationState;
+            var user = authState?.User;
+
+            if (user?.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                userName = user.Identity.Name ?? "";
+            }
+        }
+
+        try
+        {
+            reposicion = await apiservice.GetDetailsForReposicionesAsync(ReposicionID);
+        }
+        catch (ApiException)
+        {
+            // 404 u otro error de la API
+            reposicion = null;
+        }
+
+        // solo el usuario que hizo la reposición puede ver su recibo
+        if (reposicion == null || reposicion.UserName != userName)
+        {
+            reposicion = null;
+            error = $"¡Error! No estás autorizado para ver esta reposición o no existe ninguna reposición con id={ReposicionID}";
+        }
+    }
+}
