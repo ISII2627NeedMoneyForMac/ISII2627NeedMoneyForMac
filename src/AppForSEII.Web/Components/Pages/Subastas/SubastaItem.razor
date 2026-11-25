@@ -1,0 +1,29 @@
+@using AppForSEII.Web.API
+
+@*tarjeta de un libro de la lista de pujas: muestra el libro y permite fijar el precio de la puja*@
+<div class="card" style="width: 18rem;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div class="p-2">
+                <p class="card-title" id="LibroSelected_@Item.Titulo">@Item.Titulo (@Item.Autor)</p>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Puja (€)</span>
+                    <input type="number" min="1" step="1" class="form-control" id="precioPuja_@Item.Titulo"
+                           @bind="Item.PrecioPuja" @bind:after="() => OnPrecioPujaChanged.InvokeAsync(Item)" />
+                </div>
+            </div>
+            <div class="p-2">
+                <button class="btn-close" aria-label="Close" id="removeLibro_@Item.Titulo"
+                        @onclick="@(() => OnRemovedItem.InvokeAsync(Item))"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public SubastaItemDTO Item { get; set; } = default!;
+
+    [Parameter] public EventCallback<SubastaItemDTO> OnRemovedItem { get; set; }
+
+    [Parameter] public EventCallback<SubastaItemDTO> OnPrecioPujaChanged { get; set; }
+}

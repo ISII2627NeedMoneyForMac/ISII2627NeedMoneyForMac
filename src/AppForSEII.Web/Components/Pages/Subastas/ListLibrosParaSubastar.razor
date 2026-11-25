@@ -1,0 +1,184 @@
+@page "/subastas/listlibrosparasubastar"
+@using AppForSEII.Web.API
+@using AppForSEII.Web.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+
+@inject ILogger<ListLibrosParaSubastar> logger
+@inject AppForSEIIAPIClient apiservice
+@inject SubastaStateContainer subastaState
+@inject NavigationManager navigation
+
+@attribute [Authorize]
+
+<h3>Seleccionar libros para subastar</h3>
+<div class="container-fluid">
+    <div class="row">
+        <div class="d-flex justify-content-between">
+            <div><b>Libros seleccionados:</b> @subasta.SubastaItems.Count</div>
+            <button class="btn btn-primary" id="Pujar" @onclick="@PujarLibros" disabled="@PujarButtonDisabled">Pujar</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <button class="btn btn-outline-primary" id="showSubastaCart" @onclick="@ToggleSubastaCart">Lista de pujas: @TotalText €</button>
+    </div>
+
+    <div class="row" hidden="@hiddenSubastaCart">
+        @foreach (SubastaItemDTO item in subasta.SubastaItems)
+        {
+            <SubastaItem Item="item"
+                         OnRemovedItem="@(() => RemoveSubastaItem(item))"
+                         OnPrecioPujaChanged="@(_ => StateHasChanged())"></SubastaItem>
+        }
+    </div>
+
+    <div class="row">
+        <p></p>
+        <h5>Filtrar libros</h5>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">Título</span>
+            </div>
+            <input type="text" class="form-control" id="filtroTitulo" @bind="tituloLibro" />
+            <div class="input-group-prepend">
+                <span class="input-group-text">Editorial</span>
+            </div>
+            <select class="form-select" aria-label="Editorial" @bind="editorialSeleccionada" id="selectEditorial">
+                <option value="Todos" selected>Todos</option>
+                @foreach (string e in editoriales)
+                {
+                    <option value="@e" id="editorialSelected_@e">@e</option>
+                }
+            </select>
+            <div class="input-group-append">
+                <button class="btn btn-outline-primary" id="searchLibros" @onclick="@SearchLibros">Buscar libros para subastar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <div class="container-fluid">
+            @*flujo alternativo 0: no hay libros disponibles para subastar (stock = 0)*@
+            @if (Libros == null || Libros.Count() == 0)
+            {
+                <p><em>No hay libros disponibles para subastar</em></p>
+            }
+            else
+            {
+                <div class="mh-100 table-responsive">
+                    <table class="table table-condensed table-hover" id="TableOfLibros">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Editorial</th>
+                                <th>Autor</th>
+                                <th>Tipo de libro</th>
+                                <th>Subastar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var libro in Libros)
+                            {
+                                <tr id="LibroData_@libro.Titulo">
+                                    <td>@libro.Titulo</td>
+                                    <td>@libro.Editorial</td>
+                                    <td>@libro.Autor</td>
+                                    <td>@libro.TipoLibro</td>
+                                    <td>
+                                        <button class="btn btn-outline-secondary" id="libroToSubastar_@libro.Titulo" @onclick="@(() => AddLibro(libro))">Añadir</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@*diálogo modal para informar al usuario de los problemas*@
+@if (DialogOKIsOpen)
+{
+    <Dialog Caption="Error!"
+            Message="@DialogOKMessage"
+            OnClose="@OnDialogOKClose"
+            Type=Dialog.Category.Okay>
+    </Dialog>
+}
+
+@code {
+    private bool DialogOKIsOpen;
+    private string DialogOKMessage = "";
+    private void OpenDialogOK(string message)
+    {
+        DialogOKIsOpen = true;
+        DialogOKMessage = message;
+    }
+    private Task OnDialogOKClose()
+    {
+        DialogOKIsOpen = false;
+        return Task.CompletedTask;
+    }
+
+    private bool hiddenSubastaCart = true;
+    private void ToggleSubastaCart() => hiddenSubastaCart = !hiddenSubastaCart;
+
+    private ICollection<LibroParaSubastarDTO>? Libros { get; set; } = new List<LibroParaSubastarDTO>();
+
+    private ICollection<string> editoriales = new List<string>();
+    private string? tituloLibro;
+    private string editorialSeleccionada = "Todos";
+
+    private SubastaForCreateDTO subasta => subastaState.Subasta;
+
+    // flujo alternativo 4: sin libros en la lista de pujas no se puede continuar
+    private bool PujarButtonDisabled => subasta.SubastaItems.Count == 0;
+
+    // el total lo calcula el StateContainer (suma de las pujas)
+    private string TotalText => subastaState.PrecioTotal.ToString("N2");
+
+    private void AddLibro(LibroParaSubastarDTO libro) => subastaState.AddLibroToSubasta(libro);
+
+    private void RemoveSubastaItem(SubastaItemDTO item)
+    {
+        subastaState.RemoveSubastaItem(item);
+        if (subasta.SubastaItems.Count == 0) hiddenSubastaCart = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // primera carga sin filtros: con ella rellenamos el desplegable de editoriales
+        await SearchLibros();
+        editoriales = Libros!.Select(l => l.Editorial).Distinct().OrderBy(x => x).ToList();
+    }
+
+    protected async Task SearchLibros()
+    {
+        // flujo alternativo 1: filtros por título y editorial (opcionales)
+        string? titulo = string.IsNullOrWhiteSpace(tituloLibro) ? null : tituloLibro;
+        string? editorial = editorialSeleccionada == "Todos" ? null : editorialSeleccionada;
+
+        try
+        {
+            Libros = await apiservice.GetLibrosParaSubastarAsync(titulo, editorial);
+        }
+        catch (ApiException)
+        {
+            Libros = new List<LibroParaSubastarDTO>();
+            logger.LogError("Error! There was an error while connecting to the GetLibrosParaSubastarAsync service");
+        }
+    }
+
+    private void PujarLibros()
+    {
+        // flujo alternativo 2: precio de puja incorrecto (menor que 1 o con decimales)
+        if (subasta.SubastaItems.Any(i => i.PrecioPuja < 1 || i.PrecioPuja != Math.Floor(i.PrecioPuja)))
+        {
+            OpenDialogOK("El precio de la puja debe ser un número entero mayor que 0");
+            return;
+        }
+        // la página del formulario se hará en la siguiente tarea
+        navigation.NavigateTo("/subastas/createsubasta");
+    }
+}
